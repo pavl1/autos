@@ -37,7 +37,8 @@
       "objects": "always-multiline",
       "imports": "always-multiline",
       "exports": "always-multiline",
-      "functions": "ignore"
-    }]
+      "functions": "ignore",
+    }],
+    "no-console": "warn"
   }
 }
