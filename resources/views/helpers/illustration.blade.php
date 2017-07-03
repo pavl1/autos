@@ -188,7 +188,8 @@
     /** Section Drawing Canvas */
     function drawCanvas(){ //console.log('>>> Img Load Start <<<');
         var urlImg  = "{{ $car->image->url }}";
-        var img    = document.createElement("img"); //console.log(urlImg);
+        console.log(urlImg);
+        var img    = document.createElement("img");
         img.onload = function(){
             function canvasImg(jsArrCanvas){
                 var canvas = document.getElementById("canvas");
@@ -227,7 +228,8 @@
                 ///console.log( "cutCanvasKey Done: " ); console.log( msg );
                 if( msg.errors ){
                     alert( 'Error From AutoDealer: '+ msg.errors.msg );
-                    console.log( 'Error From AutoDealer: '+ msg.errors.msg );
+
+                    console.error( 'Error From AutoDealer: '+ msg.errors.msg );
                 }
                 canvasImg(msg);
             }).fail(function(e){

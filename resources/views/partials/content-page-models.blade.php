@@ -1,45 +1,13 @@
 <h2>{{ $oid->mark }}</h2>
 
 @if ($catalog == 'fiat')
-    <ul class="models">
-        @foreach ($car->models as $item)
-            <li class="model-item">
-                <a class="model-link" href="/productions/?cat={{ $catalog }}&mark={{ $oid->mark }}&model={{ $item->cmg_cod }}">
-                    <img src="{{ $item->img }}" alt="">
-                    <span>{{ $item->name }}</span>
-                </a>
-            </li>
-        @endforeach
-    <ul>
+    @include('partials.models.fiat')
 @endif
 @if ($catalog == 'etka')
-    <ul class="models-etka">
-        @foreach ($car->markets as $market)
-            <li>
-                <h3>{{ $market->ru }}</h3>
-                <ul class="models">
-                    @foreach ($car->models[$market->code] as $model)
-                        <li class="model-item">
-                            <a class="model-link" href="/production/?cat={{ $catalog }}&mark={{ $oid->mark }}&market={{ $market->code }}&model={{ $model->modell }}">
-                                {{ $model->bezeichnung }}<br />
-                                {{ $model->einsatz }} - @if( $model->auslauf > 0) {{ $model->auslauf }} @endif <br />
-                            </a>
-                        </li>
-                    @endforeach
-                </ul>
-            </li>
-        @endforeach
-    </ul>
+    @include('partials.models.etka')
 @endif
 @if ($catalog == 'bmw')
-    @foreach ($models as $model)
-        <li class="model-item">
-            <a class="model-link" href="{{ $model->Baureihe }}">
-                <img src="{{ $model->imgUrl }}" alt="">
-                <span>{{ $model->ExtBaureihe }}</span>
-            </a>
-        </li>
-    @endforeach
+    @include('partials.models.bmw')
 @endif
 @if ($catalog == 'nissan')
     @foreach ($models as $model)
