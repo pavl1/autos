@@ -1,5 +1,10 @@
 <h2>{{ $oid->mark }}</h2>
 
+@if ($catalog)
+    @include("partials.modifications.$catalog")
+@endif
+
+
 <ul class="models">
     @if ($catalog == 'fiat')
         @foreach ($car->productions as $production)
@@ -25,16 +30,6 @@
                 <a class="model-link" href="{{ $model->Baureihe }}">
                     <img src="{{ $model->imgUrl }}" alt="">
                     <span>{{ $model->ExtBaureihe }}</span>
-                </a>
-            </li>
-        @endforeach
-    @endif
-    @if ($catalog == 'nissan')
-        @foreach ($models as $model)
-            <li class="model-item">
-                <a class="model-link" href="{{ $model->seies }}">
-                    <span>{{ $model->model }}</span>
-                    <span>{{ $model->series }}</span>
                 </a>
             </li>
         @endforeach

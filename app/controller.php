@@ -116,12 +116,6 @@ add_filter('sage/template/models/data', function($data) {
     include( get_theme_root() . "/autos/vendor/autodealer/{$catalog}/api.php" );
 
     switch ($catalog) {
-        case 'fiat':
-            $api = new \Fiat();
-            $response = $api->getFIATModels($oid->mark);
-            $car->models = $response->models;
-            break;
-        # Региональность - Audi, Volkswagen, Seat, Skoda
         case 'etka':
             $api = new \ETKA();
             $response = $api->getETKAMarkets($oid->mark);
@@ -130,7 +124,6 @@ add_filter('sage/template/models/data', function($data) {
             foreach ($car->markets as $value)
                 $car->models[$value->code] = $api->getETKAModels($oid->mark, $value->code)->models;
             break;
-        # Серии
         case 'bmw':
             $oid->type = isset($_GET['type']) ? $_GET['type'] : '';
             $oid->series = isset($_GET['series']) ? $_GET['series'] : '';
@@ -140,19 +133,16 @@ add_filter('sage/template/models/data', function($data) {
             $car->mark = $api->_getMarkName($oid->mark);
             $car->models = $response->aModels;
             break;
-        # KIA, Hyundai - не работает
-        case 'mcct':
-            $api = new \MCCT();
-            $models = $api->getMcctIndex('', '');
-            break;
-        # Региональность - Nissan.Infiniti
         case 'nissan':
             $api = new \NIS();
-            // $markets = $api->getNisMarkets($mark);
-            $markets = array( 'jp' => '', 'gl' => '', 'gr' => '' );
-            $models = array();
-            foreach ($markets as $key => $value)
-                $models = array_merge($models, $api->getNisModels($mark, $key)->aModels);
+            $markets = $api->getNisMarkets($oid->mark);
+            $car->markets = array();
+            foreach ($markets as $key => $value) {
+                $car->markets[$key] = new \StdClass;
+                $car->markets[$key]->name = $value;
+                $car->markets[$key]->models = $api->getNisModels($oid->mark, $key)->aModels;
+            }
+            $car->url = "/modifications/?cat=nissan";
             break;
         # Региональность - Toyota, Lexus
         case 'toyota':
@@ -161,13 +151,6 @@ add_filter('sage/template/models/data', function($data) {
             $models = array();
             foreach ($markets as $key => $value)
                 $models = array_merge($models, $api->getToyModels($mark, $key)->aModels);
-            break;
-        # ADC
-        case 'adc':
-            $api = new \ADC();
-            $response = $api->getModelList($markID, $typeID);
-            $brand = $response->markName;
-            $models = $response->models;
             break;
         case 'td':
             $id->type = isset($_GET['type']) ? $_GET['type'] : '';
@@ -389,7 +372,7 @@ add_filter('sage/template/production/data', function($data) {
 
     return $data;
 });
-add_filter('sage/template/productions/data', function($data) {
+add_filter('sage/template/modifications/data', function($data) {
     // Общее
     $catalog = isset($_GET['cat']) ? $_GET['cat'] : '';
 
@@ -418,19 +401,13 @@ add_filter('sage/template/productions/data', function($data) {
             $response = $api->getETKAProduction($oid->mark, $oid->market, $oid->model);
             $car->productions = $response->prod;
             break;
-        # KIA, Hyundai - не работает
-        case 'mcct':
-            $api = new \MCCT();
-            $models = $api->getMcctIndex('', '');
-            break;
         # Региональность - Nissan.Infiniti
         case 'nissan':
             $api = new \NIS();
-            // $markets = $api->getNisMarkets($mark);
-            $markets = array( 'jp' => '', 'gl' => '', 'gr' => '' );
-            $models = array();
-            foreach ($markets as $key => $value)
-                $models = array_merge($models, $api->getNisModels($mark, $key)->aModels);
+            $oid->market = isset($_GET['market']) ? $_GET['market'] : '';
+            $response = $api->getNisModiff($oid->market, $oid->model);
+            $car->modifications = $response->aModif;
+            $car->url = "/groups/?cat=nissan&market={$oid->market}&model={$oid->model}";
             break;
         # Региональность - Toyota, Lexus
         case 'toyota':
@@ -439,13 +416,6 @@ add_filter('sage/template/productions/data', function($data) {
             $models = array();
             foreach ($markets as $key => $value)
                 $models = array_merge($models, $api->getToyModels($mark, $key)->aModels);
-            break;
-        # ADC
-        case 'adc':
-            $api = new \ADC();
-            $response = $api->getModelList($markID, $typeID);
-            $brand = $response->markName;
-            $models = $response->models;
             break;
         default:
             echo 'Error';
@@ -515,19 +485,14 @@ add_filter('sage/template/groups/data', function($data) {
             $car->groups = $response->aData;
             $car->info = $response->modelInfo;
             break;
-        # KIA, Hyundai - не работает
-        case 'mcct':
-            $api = new \MCCT();
-            $models = $api->getMcctIndex('', '');
-            break;
-        # Региональность - Nissan.Infiniti
         case 'nissan':
             $api = new \NIS();
-            // $markets = $api->getNisMarkets($mark);
-            $markets = array( 'jp' => '', 'gl' => '', 'gr' => '' );
-            $models = array();
-            foreach ($markets as $key => $value)
-                $models = array_merge($models, $api->getNisModels($mark, $key)->aModels);
+            $oid->modification = isset($_GET['modification']) ? $_GET['modification'] : '';
+            $oid->mark = (strpos(strtolower($oid->market), 'inf') > 1 ) ? 'infiniti' : 'nissan';
+            $response = $api->getNisModInfo($oid->market, $oid->model, $oid->modification);
+            $car->image = $response->Img;
+            $car->groups = $response->aModInfo;
+            $car->url = "/subgroups/?cat=nissan&market={$oid->market}&model={$oid->model}&modification={$oid->modification}";
             break;
         # Региональность - Toyota, Lexus
         case 'toyota':
@@ -536,13 +501,6 @@ add_filter('sage/template/groups/data', function($data) {
             $models = array();
             foreach ($markets as $key => $value)
                 $models = array_merge($models, $api->getToyModels($mark, $key)->aModels);
-            break;
-        # ADC
-        case 'adc':
-            $api = new \ADC();
-            $response = $api->getModelList($markID, $typeID);
-            $brand = $response->markName;
-            $models = $response->models;
             break;
         default:
             echo 'Error';
@@ -596,19 +554,13 @@ add_filter('sage/template/subgroups/data', function($data) {
             $api = new \BMW();
             $models = $api->getBMWCatalogs($mark)->vt;
             break;
-        # KIA, Hyundai - не работает
-        case 'mcct':
-            $api = new \MCCT();
-            $models = $api->getMcctIndex('', '');
-            break;
-        # Региональность - Nissan.Infiniti
         case 'nissan':
             $api = new \NIS();
-            // $markets = $api->getNisMarkets($mark);
-            $markets = array( 'jp' => '', 'gl' => '', 'gr' => '' );
-            $models = array();
-            foreach ($markets as $key => $value)
-                $models = array_merge($models, $api->getNisModels($mark, $key)->aModels);
+            $oid->modification = isset($_GET['modification']) ? $_GET['modification'] : '';
+            $response = $api->getNisGroup($oid->market, $oid->model, $oid->modification, $oid->group);
+            $car->image = $response->Img;
+            $car->subgroups = $response->aGroup;
+            $car->url = "/illustration/?cat=nissan&market={$oid->market}&model={$oid->model}&modification={$oid->modification}&group={$oid->group}";
             break;
         # Региональность - Toyota, Lexus
         case 'toyota':
@@ -617,13 +569,6 @@ add_filter('sage/template/subgroups/data', function($data) {
             $models = array();
             foreach ($markets as $key => $value)
                 $models = array_merge($models, $api->getToyModels($mark, $key)->aModels);
-            break;
-        # ADC
-        case 'adc':
-            $api = new \ADC();
-            $response = $api->getModelList($markID, $typeID);
-            $brand = $response->markName;
-            $models = $response->models;
             break;
         default:
             echo 'Error';
@@ -675,12 +620,8 @@ add_filter('sage/template/illustration/data', function($data) {
         case 'etka':
             $api = new \ETKA();
             $response = $api->getETKAIllustration($oid->mark, $oid->market, $oid->model, $oid->production_year, $oid->production, $oid->dir, $oid->group, $oid->subgroup, $oid->image, 0.5);
-            $car->image = $response->imgInfo;
-            $car->zoom = 'illustration';
-            $car->jump = "/illustration/?cat={ $catalog }&mark={ $oid->mark }&market={ $oid->market }&model={ $oid->model }&production_year={ $oid->production_year }&production={ $oid->production }";
-            echo '<pre>';
-            var_dump($car->image);
-            echo '</pre>';
+            $car->illustration = $response;
+            $car->url = "/illustration/?cat={ $catalog }&mark={ $oid->mark }&market={ $oid->market }&model={ $oid->model }&production_year={ $oid->production_year }&production={ $oid->production }";
             break;
         # Серии
         case 'bmw':

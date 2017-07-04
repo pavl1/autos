@@ -1,34 +1,19 @@
 <h2>{{ $oid->mark }}</h2>
 
+@if ($catalog)
+    @include("partials.groups.$catalog")
+@endif
+@if ($catalog == 'bmw')
+    @include('partials.groups.bmw')
+@endif
+
+
 @if ($catalog == 'fiat')
     @foreach ($car->groups as $group)
         <li class="model-item">
             <a class="model-link" href="/subgroups/?cat={{ $catalog }}&mark={{ $oid->mark }}&model={{ $oid->model }}&production={{ $oid->production }}&group={{ $group->code }}">
                 <img src="{{ $group->g_img }}" alt="">
                 <span>{{ $group->descr }}</span>
-            </a>
-        </li>
-    @endforeach
-@endif
-@if ($catalog == 'etka')
-    @foreach ($car->groups as $group)
-        <li class="model-item">
-            <img src="{{ $car->image }}{{ $group->hg }}.png" alt="">
-            <a class="model-link" href="/subgroups/?cat={{ $catalog }}&mark={{ $oid->mark }}&market={{ $oid->market}}&model={{ $oid->model }}&production_year={{ $oid->production_year }}&production={{ $oid->production }}&type=G&group={{ $group->hg }}">
-                {{ $group->text }}<br />
-            </a>
-        </li>
-    @endforeach
-@endif
-@if ($catalog == 'bmw')
-    @include('partials.groups.bmw')
-@endif
-@if ($catalog == 'nissan')
-    @foreach ($models as $model)
-        <li class="model-item">
-            <a class="model-link" href="{{ $model->seies }}">
-                <span>{{ $model->model }}</span>
-                <span>{{ $model->series }}</span>
             </a>
         </li>
     @endforeach

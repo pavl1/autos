@@ -2,12 +2,10 @@
 
 @include( 'helpers.illustration' )
 
-@if ($catalog == 'fiat')
-    @include('partials.illustration.fiat')
+@if ($catalog)
+    @include("partials.illustration.$catalog")
 @endif
-@if ($catalog == 'etka')
-    @include('partials.illustration.etka')
-@endif
+
 @if ($catalog == 'bmw')
     @foreach ($models as $model)
         <li class="model-item">
@@ -17,6 +15,9 @@
             </a>
         </li>
     @endforeach
+@endif
+@if ($catalog == 'fiat')
+    @include('partials.illustration.fiat')
 @endif
 @if ($catalog == 'nissan')
     @foreach ($models as $model)

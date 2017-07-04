@@ -1,24 +1,10 @@
 <h2>{{ $oid->mark }}</h2>
 
-@if ($catalog == 'fiat')
-    @include('partials.models.fiat')
+@if ($catalog)
+    @include("partials.models.$catalog")
 @endif
-@if ($catalog == 'etka')
-    @include('partials.models.etka')
-@endif
-@if ($catalog == 'bmw')
-    @include('partials.models.bmw')
-@endif
-@if ($catalog == 'nissan')
-    @foreach ($models as $model)
-        <li class="model-item">
-            <a class="model-link" href="{{ $model->seies }}">
-                <span>{{ $model->model }}</span>
-                <span>{{ $model->series }}</span>
-            </a>
-        </li>
-    @endforeach
-@endif
+
+
 @if ($catalog == 'toyota')
     @foreach ($models as $model)
         <li class="model-item">
