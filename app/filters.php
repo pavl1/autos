@@ -7,7 +7,10 @@ namespace App;
  */
 add_filter('body_class', function (array $classes) {
     /** Add page slug if it doesn't exist */
-    if (is_single() || is_page() && !is_front_page()) {
+    if (is_front_page()) {
+        $classes[] = 'frontpage';
+    }
+    elseif (is_single() || is_page() ) {
         if (!in_array(basename(get_permalink()), $classes)) {
             $classes[] = basename(get_permalink());
         }
@@ -68,3 +71,18 @@ add_filter('template_include', function ($template) {
  * Tell WordPress how to find the compiled path of comments.blade.php
  */
 add_filter('comments_template', 'App\\template_path');
+
+/**
+ *
+ */
+add_filter('get_search_form', function($form) {
+    $form = '
+    <form role="search" method="get" class="search-form" action="//localhost:3000/">
+        <label>
+        <input type="search" class="search-field" placeholder="Введите наименование / Артикул детали" value="" name="s">
+        </label>
+        <input type="submit" class="search-submit" value="Поиск">
+    </form>
+    ';
+    return $form;
+});

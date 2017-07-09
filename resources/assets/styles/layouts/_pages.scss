@@ -1,41 +1,81 @@
-.marks,
-.models {
-    display: flex;
-    flex-flow: row wrap;
-    justify-content: space-between;
-    list-style: none;
+.mark {
 
-}
-
-.mark,
-.model {
+    &s {
+        display: flex;
+        flex-flow: row wrap;
+        justify-content: flex-start;
+        list-style: none;
+    }
 
     &-item {
+        position: relative;
         display: flex;
-        width: 20%;
-        padding: 1rem;
+        flex-flow: row wrap;
         justify-content: flex-start;
-        flex-flow: column wrap;
-        text-align: center;
+        align-items: center;
+        overflow: hidden;
+        width: 24%;
+        padding: 0.25rem 0.5rem;
+        margin-top: 0.25rem;
+        margin-right: 0.25rem;
+        background: $white;
+        border: 2px solid $brand-gray;
+        box-sizing: padding-box;
+        transition: border-color 0.2s ease;
 
-        img {
-            object-fit: contain;
-            max-width: 100%;
-            height: 50px;
-        }
-    }
-
-    &-links { padding: 0; list-style: none }
-
-    &-link {
-        display: block;
-        padding: 0.5rem 1rem;
-        background: scale-color($brand-primary, $lightness: 95%);
-        transition: background-color 0.2s ease;
+        &:after{}
 
         &:hover {
-            background: scale-color($brand-primary, $lightness: 70%);
-            text-decoration: none;
+            overflow: visible;
+            border-color: $brand-gray-dark;
+        }
+        &:hover .mark-links {
+            opacity: 1;
         }
     }
+
+    &-image {
+        object-fit: contain;
+        max-width: 57px;
+        max-height: 46px;
+        margin-right: 1rem;
+    }
+    &-name { text-transform: uppercase }
+
+
+    &-link {
+        position: relative;
+        display: block;
+        padding: 0.5rem 1rem;
+        text-align: center;
+        transition: background-color 0.2s ease;
+
+        &:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            height: 1px;
+            background-color: $brand-gray;
+        }
+        &:hover { text-decoration: none }
+    }
+    &-links {
+        padding: 0;
+        list-style: none;
+        position: absolute;
+        left: -2px;
+        top: 100%;
+        width: calc(100% + 4px);
+        opacity: 0;
+        z-index: 1;
+        border-width: 0 2px 2px 2px;
+        border-style: solid;
+        border-color: $brand-gray-dark;
+        background-color: $white;
+        transition: opacity 0.2s ease;
+    }
+
 }

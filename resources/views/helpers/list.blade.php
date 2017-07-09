@@ -1,7 +1,7 @@
 <ul>
 @foreach ($items as $item)
     <li class="tree-item">
-        <a class="equipment-link" href="/details/?cat=td&markID={{ $markID }}&modelID={{ $modelID }}&equipmentID={{ $equipmentID }}&treeID={{ $item->str_id }}">
+        <a class="equipment-link" href="/details/?cat=td&mark={{ $id->mark }}&model={{ $id->model }}&equipment={{ $id->equipment }}&tree={{ $item->str_id }}">
             <span>{{ $item->str_des }}</span>
         </a>
         @if (isset($item->childrens))
