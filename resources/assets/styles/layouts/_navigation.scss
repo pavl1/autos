@@ -26,19 +26,47 @@
 
         .menu-item {
             position: relative;
-            background-color: $white;
             width: 65px;
             height: 65px;
+            overflow: hidden;
+            transition: width 0.2s ease;
 
-            &:before {
-                content: '';
-                position: absolute;
-                width: 65px;
+
+            &:hover {
+                width: 100%;
+                box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.5);
+
+                &.catalog { background: url("../images/catalog_black.png") 7px center no-repeat $white }
+                &.shares { background: url("../images/shares_black.png") 7px center no-repeat $white }
+                &.accessories { background: url("../images/accessories_black.png") 7px center no-repeat $white }
+                &.oil { background: url("../images/oil_black.png") 7px center no-repeat $white }
+                &.cart { background: url("../images/cart_black.png") 7px center no-repeat $white }
+            }
+            &.catalog { background: url("../images/catalog.png") 7px center no-repeat }
+            &.shares { background: url("../images/shares.png") 7px center no-repeat }
+            &.accessories { background: url("../images/accessories.png") 7px center no-repeat }
+            &.oil { background: url("../images/oil.png") 7px center no-repeat }
+            &.cart { background: url("../images/cart.png") 7px center no-repeat }
+
+            a {
+                color: transparent;
+                display: inline-block;
+                background: linear-gradient(to right, transparent 65px, $brand-gray 65px, $white);
+                border-right: 5px solid $brand-red;
+                padding: 0 1rem 0 calc(65px + 1rem);
                 height: 65px;
+                width: 14rem;
+                line-height: 65px;
+                text-transform: uppercase;
+                transition: color 0.3s ease 0.1s;
+
+                &:hover {
+                    text-decoration: none;
+                    color: $brand-black;
+                }
             }
-            &.catalog:before {
-                background: url("../images/oil.png") 0 0 no-repeat;
-            }
+
+
         }
     }
 }
@@ -50,6 +78,7 @@
     top: 0;
     left: 0;
     background-color: $brand-primary;
+    z-index: 10;
 
     &:before {
         content: '';

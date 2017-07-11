@@ -86,3 +86,7 @@ add_filter('get_search_form', function($form) {
     ';
     return $form;
 });
+
+add_filter('sage/display_sidebar', function(){
+    return true;
+});
