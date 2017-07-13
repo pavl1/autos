@@ -3,14 +3,14 @@
     $oIllustration = $car->illustration;
 
 
-    $market = $oid->market;
-    $mark   = $oid->mark;
-    $model  = $oid->model;
-    $modif  = $oid->modification;
-    $group  = $oid->group;
-    $figure = $oid->figure;
-    $subfig = $oid->subimage;
-    $sec    = $pic = $oid->sec;
+    $market = $id->market;
+    $mark   = $id->mark;
+    $model  = $id->model;
+    $modif  = $id->modification;
+    $group  = $id->group;
+    $figure = $id->figure;
+    $subfig = $id->subimage;
+    $sec    = $pic = $id->sec;
 @endphp
 <?php
 if(!empty($oIllustration)){
@@ -89,7 +89,7 @@ if(!empty($oIllustration)){
         /// Адрес для перехода к другому изображению
         $secUrl = $car->secUrl;
 
-        $markName = urlencode($oid->mark);
+        $markName = urlencode($id->mark);
         $modelName = urlencode($aBreads->modifs->name);
     }else{
         $msg = "По Вашему запросу ничего не найдено";

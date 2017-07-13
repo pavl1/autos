@@ -12,7 +12,7 @@
                 @if(isset($mark->aftermarket))
                     @foreach ($mark->aftermarket as $item)
                         <li>
-                            <a class="mark-link" href="/models/?cat=td&mark={{ $item->mfa_id }}"> Заменители </a>
+                            <a class="mark-link" href="/models/?cat=td&mark={{ $item->mfa_id }}"> Заменители {{ str_replace(strtoupper($mark->name), '', $item->mfa_mfc_code) }}</a>
                         </li>
                     @endforeach
                 @endif

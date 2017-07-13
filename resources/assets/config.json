@@ -9,7 +9,7 @@
     ]
   },
   "publicPath": "/app/themes/autos",
-  "devUrl": "http://autos.dev",
+  "devUrl": "http://autos.devel",
   "proxyUrl": "http://localhost:3000",
   "cacheBusting": "[name]_[hash:8]",
   "watch": [

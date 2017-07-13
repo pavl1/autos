@@ -17,10 +17,11 @@ add_filter('sage/template/frontpage/data', function($data) {
 
     $marksOriginal = array_filter($ADC->getMarkList(9)->marks, function($mark) use ($whitelist) {
         if ( !in_array(strtolower($mark->mark_name), $whitelist) ) return false;
-        return (1 == $mark->flags) && (1000 != $mark->mark_id);
+        return 1000 != $mark->mark_id;
     });
+    echo '<pre>'; var_dump($TD->getTDMarks('pc')); echo '</pre>';
     $marksAftermarket = array_filter($TD->getTDMarks('pc')->marks, function($mark) use ($whitelist) {
-        if ( !in_array(strtolower($mark->mfa_brand), $whitelist) ) return false;
+        if ( !in_array( explode(' ', strtolower($mark->mfa_brand))[0], $whitelist) ) return false;
         return true;
     });
 
@@ -122,8 +123,8 @@ add_filter('sage/template/frontpage/data', function($data) {
 add_filter('sage/template/models/data', function($data) {
     // Общее
     $catalog = isset($_GET['cat']) ? $_GET['cat'] : '';
-    $oid = new \StdClass();
-    $oid->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
+    $id = new \StdClass();
+    $id->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
     $id = new \StdClass();
     $car = new \StdClass();
 
@@ -134,37 +135,34 @@ add_filter('sage/template/models/data', function($data) {
     switch ($catalog) {
         case 'etka':
             $api = new \ETKA();
-            $response = $api->getETKAMarkets($oid->mark);
+            $response = $api->getETKAMarkets($id->mark);
             $car->markets = $response->markets;
             $car->models = array();
             foreach ($car->markets as $value)
-                $car->models[$value->code] = $api->getETKAModels($oid->mark, $value->code)->models;
+                $car->models[$value->code] = $api->getETKAModels($id->mark, $value->code)->models;
             break;
-
         case 'bmw':
-            $oid->type = isset($_GET['type']) ? $_GET['type'] : '';
-            $oid->series = isset($_GET['series']) ? $_GET['series'] : '';
+            $id->type = isset($_GET['type']) ? $_GET['type'] : '';
+            $id->series = isset($_GET['series']) ? $_GET['series'] : '';
             $api = new \BMW();
-            $response = $api->getBMWModels($oid->type, $oid->series);
+            $response = $api->getBMWModels($id->type, $id->series);
             $car->series = $api->_getSeries($response->aBreads->models->name);
-            $car->mark = $api->_getMarkName($oid->mark);
+            $car->mark = $api->_getMarkName($id->mark);
             $car->models = $response->aModels;
             break;
-
         case 'nissan':
             $api = new \NIS();
 
             // модели распределенные по регионам
             $car->markets = array();
-            foreach ($api->getNisMarkets($oid->mark) as $key => $value) {
+            foreach ($api->getNisMarkets($id->mark) as $key => $value) {
                 $car->markets[$key] = new \StdClass;
                 $car->markets[$key]->name = $value;
-                $car->markets[$key]->models = $api->getNisModels($oid->mark, $key)->aModels;
+                $car->markets[$key]->models = $api->getNisModels($id->mark, $key)->aModels;
             }
             // адрес для ссылок
             $car->url = "/modifications/?cat=nissan";
             break;
-
         case 'toyota':
             $api = new \TOY();
 
@@ -173,12 +171,11 @@ add_filter('sage/template/models/data', function($data) {
             foreach ($api->getToyMarkets() as $key => $value) {
                 $car->markets[$key] = new \StdClass;
                 $car->markets[$key]->name = $value;
-                $car->markets[$key]->models = $api->getToyModels($oid->mark, $key)->aModels;
+                $car->markets[$key]->models = $api->getToyModels($id->mark, $key)->aModels;
             }
             // адрес для ссылок
-            $car->url = "/options/?cat=toyota&mark={$oid->mark}";
+            $car->url = "/options/?cat=toyota&mark={$id->mark}";
             break;
-
         case 'td':
             $id->type = isset($_GET['type']) ? $_GET['type'] : '';
             $id->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
@@ -187,6 +184,14 @@ add_filter('sage/template/models/data', function($data) {
             $car->info = $response->modelInfo;
             $car->models = $response->models;
             break;
+        case 'adc':
+            $id->type = isset($_GET['type']) ? $_GET['type'] : '';
+            $id->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
+            $api = new \ADC();
+            $response = $api->getModelList($id->mark, $id->type);
+            $car->models = $response->models;
+            $car->url = "/tree/?cat=adc&mark{$id->mark}&type={$id->type}";
+            break;
         default:
             echo 'Error';
             break;
@@ -194,19 +199,19 @@ add_filter('sage/template/models/data', function($data) {
 
     $data = [
         'catalog' => $catalog,
-        'oid' => $oid,
+        'oid' => $id,
         'id' => $id,
         'car' => $car
     ];
 
     return $data;
 });
-// Оригиналы
+// Originals
 add_filter('sage/template/series/data', function($data) {
     // Общее
     $catalog = isset($_GET['cat']) ? $_GET['cat'] : '';
-    $oid = new \StdClass();
-    $oid->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
+    $id = new \StdClass();
+    $id->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
     // Выходные объекты
     $car = new \StdClass();
 
@@ -217,9 +222,9 @@ add_filter('sage/template/series/data', function($data) {
     switch ($catalog) {
         # Серии
         case 'bmw':
-            $oid->type = 'vt';
+            $id->type = 'vt';
             $api = new \BMW();
-            $response = $api->getBMWCatalogs($oid->mark);
+            $response = $api->getBMWCatalogs($id->mark);
             $car->series = $response->vt;
             break;
         default:
@@ -229,7 +234,7 @@ add_filter('sage/template/series/data', function($data) {
 
     $data = [
         'catalog' => $catalog,
-        'oid' => $oid,
+        'oid' => $id,
         'car' => $car
     ];
 
@@ -237,9 +242,9 @@ add_filter('sage/template/series/data', function($data) {
 });
 add_filter('sage/template/options/data', function($data) {
     $catalog = isset($_GET['cat']) ? $_GET['cat'] : '';
-    $oid = new \StdClass();
-    $oid->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
-    $oid->model = isset($_GET['model']) ? $_GET['model'] : '';
+    $id = new \StdClass();
+    $id->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
+    $id->model = isset($_GET['model']) ? $_GET['model'] : '';
     $car = new \StdClass();
 
     // Обязательно к применению
@@ -248,23 +253,23 @@ add_filter('sage/template/options/data', function($data) {
 
     switch ($catalog) {
         case 'bmw':
-            $oid->type = isset($_GET['type']) ? $_GET['type'] : '';
-            $oid->series = isset($_GET['series']) ? $_GET['series'] : '';
-            $oid->body = isset($_GET['body']) ? $_GET['body'] : '';
-            $oid->market = isset($_GET['market']) ? $_GET['market'] : '';
+            $id->type = isset($_GET['type']) ? $_GET['type'] : '';
+            $id->series = isset($_GET['series']) ? $_GET['series'] : '';
+            $id->body = isset($_GET['body']) ? $_GET['body'] : '';
+            $id->market = isset($_GET['market']) ? $_GET['market'] : '';
             $api = new \BMW();
-            $response = $api->getBMWOptions($oid->type, $oid->series, $oid->body, $oid->model, $oid->market);
+            $response = $api->getBMWOptions($id->type, $id->series, $id->body, $id->model, $id->market);
             $car->options = $response->aData;
             break;
         case 'toyota':
             $api = new \TOY();
-            $oid->market = isset($_GET['market']) ? $_GET['market'] : '';
-            $response = $api->getToyModiff($oid->market, $oid->model);
+            $id->market = isset($_GET['market']) ? $_GET['market'] : '';
+            $response = $api->getToyModiff($id->market, $id->model);
 
             // опции автомобиля
             $car->options = $response->aModif;
             // адрес для ссылок
-            $car->url = "/groups/?cat=toyota&mark={$oid->mark}&market={$oid->market}&model={$oid->model}";
+            $car->url = "/groups/?cat=toyota&mark={$id->mark}&market={$id->market}&model={$id->model}";
             // сокращения
             $shortening = [ 1 => "Двигатель", 2 => "Кузов", 3 => "Класс", 4 => "КПП", 5 => "Другое" ];
             $car->shortening = array();
@@ -288,7 +293,7 @@ add_filter('sage/template/options/data', function($data) {
 
     $data = [
         'catalog' => $catalog,
-        'oid' => $oid,
+        'oid' => $id,
         'car' => $car
     ];
 
@@ -296,9 +301,9 @@ add_filter('sage/template/options/data', function($data) {
 });
 add_filter('sage/template/production/data', function($data) {
     $catalog = isset($_GET['cat']) ? $_GET['cat'] : '';
-    $oid = new \StdClass();
-    $oid->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
-    $oid->model = isset($_GET['model']) ? $_GET['model'] : '';
+    $id = new \StdClass();
+    $id->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
+    $id->model = isset($_GET['model']) ? $_GET['model'] : '';
     $car = new \StdClass();
 
     // Обязательно к применению
@@ -308,26 +313,26 @@ add_filter('sage/template/production/data', function($data) {
     switch ($catalog) {
         case 'fiat':
             $api = new \Fiat();
-            $response = $api->getFIATProduction($oid->mark, $oid->model);
+            $response = $api->getFIATProduction($id->mark, $id->model);
             $car->productions = $response->prod;
             break;
         case 'etka':
-            $oid->market = isset($_GET['market']) ? $_GET['market'] : '';
-            $oid->dir = isset($_GET['dir']) ? $_GET['dir'] : 'R';
+            $id->market = isset($_GET['market']) ? $_GET['market'] : '';
+            $id->dir = isset($_GET['dir']) ? $_GET['dir'] : 'R';
             $api = new \ETKA();
-            $response = $api->getETKAProduction($oid->mark, $oid->market, $oid->model);
+            $response = $api->getETKAProduction($id->mark, $id->market, $id->model);
             $car->productions = $response->prod;
-            $car->url = "/groups/?cat=etka&mark={$oid->mark}&market={$oid->market}&model={$oid->model}";
+            $car->url = "/groups/?cat=etka&mark={$id->mark}&market={$id->market}&model={$id->model}";
             break;
         case 'bmw':
-            $oid->type = isset($_GET['type']) ? $_GET['type'] : '';
-            $oid->series = isset($_GET['series']) ? $_GET['series'] : '';
-            $oid->body = isset($_GET['body']) ? $_GET['body'] : '';
-            $oid->market = isset($_GET['market']) ? $_GET['market'] : '';
-            $oid->rule = isset($_GET['rule']) ? $_GET['rule'] : '';
-            $oid->transmission = isset($_GET['transmission']) ? $_GET['transmission'] : '';
+            $id->type = isset($_GET['type']) ? $_GET['type'] : '';
+            $id->series = isset($_GET['series']) ? $_GET['series'] : '';
+            $id->body = isset($_GET['body']) ? $_GET['body'] : '';
+            $id->market = isset($_GET['market']) ? $_GET['market'] : '';
+            $id->rule = isset($_GET['rule']) ? $_GET['rule'] : '';
+            $id->transmission = isset($_GET['transmission']) ? $_GET['transmission'] : '';
             $api = new \BMW();
-            $response = $api->getBMWProduction($oid->type, $oid->series, $oid->body, $oid->model, $oid->market, $oid->rule, $oid->transmission);
+            $response = $api->getBMWProduction($id->type, $id->series, $id->body, $id->model, $id->market, $id->rule, $id->transmission);
             $aData = $response->aData;
             $aData = current($aData);
             $aData = [
@@ -341,7 +346,7 @@ add_filter('sage/template/production/data', function($data) {
                 "endDay"     => substr($aData->DateEnd,6,2),
             ];
             $car->production = $aData;
-            $car->url = "/groups/?cat={$catalog}&mark={$oid->mark}&type={$oid->type}&series={$oid->series}&body={$oid->body}&model={$oid->model}&market={$oid->market}&rule={$oid->rule}&transmission={$oid->transmission}";
+            $car->url = "/groups/?cat={$catalog}&mark={$id->mark}&type={$id->type}&series={$id->series}&body={$id->body}&model={$id->model}&market={$id->market}&rule={$id->rule}&transmission={$id->transmission}";
             break;
         case 'nissan':
             $api = new \NIS();
@@ -367,7 +372,7 @@ add_filter('sage/template/production/data', function($data) {
 
     $data = [
         'catalog' => $catalog,
-        'oid' => $oid,
+        'oid' => $id,
         'car' => $car
     ];
 
@@ -378,9 +383,9 @@ add_filter('sage/template/modifications/data', function($data) {
     $catalog = isset($_GET['cat']) ? $_GET['cat'] : '';
 
     // Оригиналы
-    $oid = new \StdClass();
-    $oid->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
-    $oid->model = isset($_GET['model']) ? $_GET['model'] : '';
+    $id = new \StdClass();
+    $id->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
+    $id->model = isset($_GET['model']) ? $_GET['model'] : '';
     // Выходные объекты
     $car = new \StdClass();
 
@@ -391,24 +396,24 @@ add_filter('sage/template/modifications/data', function($data) {
     switch ($catalog) {
         case 'fiat':
             $api = new \Fiat();
-            $response = $api->getFIATProduction($oid->mark, $oid->model);
+            $response = $api->getFIATProduction($id->mark, $id->model);
             $car->productions = $response->prod;
             break;
         # Региональность - Audi, Volkswagen, Seat, Skoda
         case 'etka':
-            $oid->market = isset($_GET['market']) ? $_GET['market'] : '';
-            $oid->dir = isset($_GET['dir']) ? $_GET['dir'] : 'R';
+            $id->market = isset($_GET['market']) ? $_GET['market'] : '';
+            $id->dir = isset($_GET['dir']) ? $_GET['dir'] : 'R';
             $api = new \ETKA();
-            $response = $api->getETKAProduction($oid->mark, $oid->market, $oid->model);
+            $response = $api->getETKAProduction($id->mark, $id->market, $id->model);
             $car->productions = $response->prod;
             break;
         # Региональность - Nissan.Infiniti
         case 'nissan':
             $api = new \NIS();
-            $oid->market = isset($_GET['market']) ? $_GET['market'] : '';
-            $response = $api->getNisModiff($oid->market, $oid->model);
+            $id->market = isset($_GET['market']) ? $_GET['market'] : '';
+            $response = $api->getNisModiff($id->market, $id->model);
             $car->modifications = $response->aModif;
-            $car->url = "/groups/?cat=nissan&market={$oid->market}&model={$oid->model}";
+            $car->url = "/groups/?cat=nissan&market={$id->market}&model={$id->model}";
             break;
         # Региональность - Toyota, Lexus
         case 'toyota':
@@ -425,7 +430,7 @@ add_filter('sage/template/modifications/data', function($data) {
 
     $data = [
         'catalog' => $catalog,
-        'oid' => $oid,
+        'oid' => $id,
         'car' => $car
     ];
 
@@ -433,11 +438,11 @@ add_filter('sage/template/modifications/data', function($data) {
 });
 add_filter('sage/template/groups/data', function($data) {
     $catalog = isset($_GET['cat']) ? $_GET['cat'] : '';
-    $oid = new \StdClass();
-    $oid->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
-    $oid->model = isset($_GET['model']) ? $_GET['model'] : '';
-    $oid->market = isset($_GET['market']) ? $_GET['market'] : '';
-    $oid->production = isset($_GET['production']) ? $_GET['production'] : '';
+    $id = new \StdClass();
+    $id->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
+    $id->model = isset($_GET['model']) ? $_GET['model'] : '';
+    $id->market = isset($_GET['market']) ? $_GET['market'] : '';
+    $id->production = isset($_GET['production']) ? $_GET['production'] : '';
     $car = new \StdClass();
 
     // Обязательно к применению
@@ -447,65 +452,65 @@ add_filter('sage/template/groups/data', function($data) {
     switch ($catalog) {
         case 'fiat':
             $api = new \Fiat();
-            $response = $api->getFIATGroup($oid->mark, $oid->model, $oid->production);
+            $response = $api->getFIATGroup($id->mark, $id->model, $id->production);
             $car->groups = $response->groups;
             break;
         case 'etka':
-            $oid->production_year = isset($_GET['production_year']) ? $_GET['production_year'] : '';
-            $oid->code = isset($_GET['code']) ? $_GET['code'] : '';
-            $oid->dir = isset($_GET['dir']) ? $_GET['dir'] : '';
+            $id->production_year = isset($_GET['production_year']) ? $_GET['production_year'] : '';
+            $id->code = isset($_GET['code']) ? $_GET['code'] : '';
+            $id->dir = isset($_GET['dir']) ? $_GET['dir'] : '';
             $api = new \ETKA();
-            $response = $api->getETKAGroups($oid->mark, $oid->market, $oid->model, $oid->production_year, $oid->code, $oid->dir);
+            $response = $api->getETKAGroups($id->mark, $id->market, $id->model, $id->production_year, $id->code, $id->dir);
             $car->groups = $response->hg;
             $car->image = get_stylesheet_directory_uri() . '/vendor/autodealer/media/images/etka/groups/';
             break;
         case 'bmw':
-            $oid->type = isset($_GET['type']) ? $_GET['type'] : '';
-            $oid->series = isset($_GET['series']) ? $_GET['series'] : '';
-            $oid->body = isset($_GET['body']) ? $_GET['body'] : '';
-            $oid->market = isset($_GET['market']) ? $_GET['market'] : '';
-            $oid->rule = isset($_GET['rule']) ? $_GET['rule'] : '';
-            $oid->transmission = isset($_GET['transmission']) ? $_GET['transmission'] : '';
-            $oid->production = isset($_GET['production']) ? $_GET['production'] : '';
+            $id->type = isset($_GET['type']) ? $_GET['type'] : '';
+            $id->series = isset($_GET['series']) ? $_GET['series'] : '';
+            $id->body = isset($_GET['body']) ? $_GET['body'] : '';
+            $id->market = isset($_GET['market']) ? $_GET['market'] : '';
+            $id->rule = isset($_GET['rule']) ? $_GET['rule'] : '';
+            $id->transmission = isset($_GET['transmission']) ? $_GET['transmission'] : '';
+            $id->production = isset($_GET['production']) ? $_GET['production'] : '';
 
             $api = new \BMW();
-            $response = $api->getBMWGroups($oid->type, $oid->series, $oid->body, $oid->model, $oid->market, $oid->rule, $oid->transmission, $oid->production, 'ru');
-            $car->url = "/subgroups/?cat={$catalog}&mark={$oid->mark}&type={$oid->type}&series={$oid->series}&body={$oid->body}&model={$oid->model}&market={$oid->market}&rule={$oid->rule}&transmission={$oid->transmission}&production={$oid->production}";
+            $response = $api->getBMWGroups($id->type, $id->series, $id->body, $id->model, $id->market, $id->rule, $id->transmission, $id->production, 'ru');
+            $car->url = "/subgroups/?cat={$catalog}&mark={$id->mark}&type={$id->type}&series={$id->series}&body={$id->body}&model={$id->model}&market={$id->market}&rule={$id->rule}&transmission={$id->transmission}&production={$id->production}";
             $car->series = $api->_getSeries($response->aBreads->models->name);
-            $car->mark = $api->_getMarkName($oid->mark);
+            $car->mark = $api->_getMarkName($id->mark);
             $car->modification = $response->aBreads->groups->name;
             $car->groups = $response->aData;
             $car->info = $response->modelInfo;
             break;
         case 'nissan':
             $api = new \NIS();
-            $oid->modification = isset($_GET['modification']) ? $_GET['modification'] : '';
-            $oid->mark = (strpos(strtolower($oid->market), 'inf') > 1 ) ? 'infiniti' : 'nissan';
-            $response = $api->getNisModInfo($oid->market, $oid->model, $oid->modification);
+            $id->modification = isset($_GET['modification']) ? $_GET['modification'] : '';
+            $id->mark = (strpos(strtolower($id->market), 'inf') > 1 ) ? 'infiniti' : 'nissan';
+            $response = $api->getNisModInfo($id->market, $id->model, $id->modification);
             $car->image = $response->Img;
             $car->groups = $response->aModInfo;
-            $car->url = "/subgroups/?cat=nissan&market={$oid->market}&model={$oid->model}&modification={$oid->modification}";
+            $car->url = "/subgroups/?cat=nissan&market={$id->market}&model={$id->model}&modification={$id->modification}";
             break;
         case 'toyota':
             $api = new \TOY();
-            $oid->compl = isset($_GET['compl']) ? $_GET['compl'] : '';
-            $oid->option = isset($_GET['option']) ? $_GET['option'] : '';
-            $oid->code = isset($_GET['code']) ? $_GET['code'] : '';
+            $id->compl = isset($_GET['compl']) ? $_GET['compl'] : '';
+            $id->option = isset($_GET['option']) ? $_GET['option'] : '';
+            $id->code = isset($_GET['code']) ? $_GET['code'] : '';
             // дополнительные данные
-            $oid->vin = isset($_GET['vin']) ? $_GET['vin'] : '';
-            $oid->vdate = isset($_GET['vdate']) ? $_GET['vdate'] : '';
-            $oid->siyopt = isset($_GET['siyopt']) ? $_GET['siyopt'] : '';
-            $response = $api->getToyModCompl($oid->market, $oid->model, $oid->compl, $oid->option, $oid->code, $oid->vin, $oid->vdate, $oid->siyopt);
+            $id->vin = isset($_GET['vin']) ? $_GET['vin'] : '';
+            $id->vdate = isset($_GET['vdate']) ? $_GET['vdate'] : '';
+            $id->siyopt = isset($_GET['siyopt']) ? $_GET['siyopt'] : '';
+            $response = $api->getToyModCompl($id->market, $id->model, $id->compl, $id->option, $id->code, $id->vin, $id->vdate, $id->siyopt);
 
             // группы
             $car->groups = $response->aCompl;
             // адрес для ссылок
-            $car->url = "/illustration/?cat=toyota&mark={$oid->mark}&market={$oid->market}&model={$oid->model}&compl={$oid->compl}&option={$oid->option}&code={$oid->code}";
+            $car->url = "/illustration/?cat=toyota&mark={$id->mark}&market={$id->market}&model={$id->model}&compl={$id->compl}&option={$id->option}&code={$id->code}";
             // дополнительный url
             $car->getString = ""
-                . ( ( $oid->vin )   ? "&vin={$oid->vin}" : "" )
-                . ( ( $oid->vdate ) ? "&vdate={$oid->vdate}" : "" )
-                . ( ( $oid->siyopt )? "&siyopt={$oid->siyopt}" : "" );
+                . ( ( $id->vin )   ? "&vin={$id->vin}" : "" )
+                . ( ( $id->vdate ) ? "&vdate={$id->vdate}" : "" )
+                . ( ( $id->siyopt )? "&siyopt={$id->siyopt}" : "" );
             break;
 
         default:
@@ -515,7 +520,7 @@ add_filter('sage/template/groups/data', function($data) {
 
     $data = [
         'catalog' => $catalog,
-        'oid' => $oid,
+        'oid' => $id,
         'car' => $car
     ];
 
@@ -523,7 +528,7 @@ add_filter('sage/template/groups/data', function($data) {
 });
 add_filter('sage/template/subgroups/data', function($data) {
     $catalog = isset($_GET['cat']) ? $_GET['cat'] : '';
-    $oid = new \StdClass();
+    $id = new \StdClass();
     $car = new \StdClass();
 
     // Обязательно к применению
@@ -533,59 +538,59 @@ add_filter('sage/template/subgroups/data', function($data) {
     switch ($catalog) {
         case 'fiat':
             $api = new \Fiat();
-            $oid->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
-            $oid->model = isset($_GET['model']) ? $_GET['model'] : '';
-            $oid->production = isset($_GET['production']) ? $_GET['production'] : '';
-            $oid->group = isset($_GET['group']) ? $_GET['group'] : '';
+            $id->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
+            $id->model = isset($_GET['model']) ? $_GET['model'] : '';
+            $id->production = isset($_GET['production']) ? $_GET['production'] : '';
+            $id->group = isset($_GET['group']) ? $_GET['group'] : '';
 
-            $response = $api->getFIATSubGroup($oid->mark, $oid->model, $oid->production, $oid->group);
+            $response = $api->getFIATSubGroup($id->mark, $id->model, $id->production, $id->group);
             $car->subgroups = $response->subGroups;
             break;
         case 'etka':
             $api = new \ETKA();
-            $oid->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
-            $oid->model = isset($_GET['model']) ? $_GET['model'] : '';
-            $oid->market = isset($_GET['market']) ? $_GET['market'] : '';
-            $oid->production_year = isset($_GET['production_year']) ? $_GET['production_year'] : '';
-            $oid->group = isset($_GET['group']) ? $_GET['group'] : '';
-            $oid->dir = isset($_GET['dir']) ? $_GET['dir'] : 'R';
-            $oid->code = isset($_GET['code']) ? $_GET['code'] : '';
+            $id->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
+            $id->model = isset($_GET['model']) ? $_GET['model'] : '';
+            $id->market = isset($_GET['market']) ? $_GET['market'] : '';
+            $id->production_year = isset($_GET['production_year']) ? $_GET['production_year'] : '';
+            $id->group = isset($_GET['group']) ? $_GET['group'] : '';
+            $id->dir = isset($_GET['dir']) ? $_GET['dir'] : 'R';
+            $id->code = isset($_GET['code']) ? $_GET['code'] : '';
 
-            $response = $api->getETKASubGroups($oid->mark, $oid->market, $oid->model, $oid->production_year, $oid->code, $oid->dir, $oid->group);
+            $response = $api->getETKASubGroups($id->mark, $id->market, $id->model, $id->production_year, $id->code, $id->dir, $id->group);
             $car->subgroups = array_filter($response->ug, function($value) {
                 return $value->ou != 'O';
             });
             break;
         case 'bmw':
             $api = new \BMW();
-            $oid->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
-            $oid->type = isset($_GET['type']) ? $_GET['type'] : '';
-            $oid->series = isset($_GET['series']) ? $_GET['series'] : '';
-            $oid->body = isset($_GET['body']) ? $_GET['body'] : '';
-            $oid->model = isset($_GET['model']) ? $_GET['model'] : '';
-            $oid->market = isset($_GET['market']) ? $_GET['market'] : '';
-            $oid->rule = isset($_GET['rule']) ? $_GET['rule'] : '';
-            $oid->transmission = isset($_GET['transmission']) ? $_GET['transmission'] : '';
-            $oid->production = isset($_GET['production']) ? $_GET['production'] : '';
-            $oid->group = isset($_GET['group']) ? $_GET['group'] : '';
+            $id->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
+            $id->type = isset($_GET['type']) ? $_GET['type'] : '';
+            $id->series = isset($_GET['series']) ? $_GET['series'] : '';
+            $id->body = isset($_GET['body']) ? $_GET['body'] : '';
+            $id->model = isset($_GET['model']) ? $_GET['model'] : '';
+            $id->market = isset($_GET['market']) ? $_GET['market'] : '';
+            $id->rule = isset($_GET['rule']) ? $_GET['rule'] : '';
+            $id->transmission = isset($_GET['transmission']) ? $_GET['transmission'] : '';
+            $id->production = isset($_GET['production']) ? $_GET['production'] : '';
+            $id->group = isset($_GET['group']) ? $_GET['group'] : '';
 
-            $response = $api->getBMWSubGroups($oid->type, $oid->series, $oid->body, $oid->model, $oid->market, $oid->rule, $oid->transmission, $oid->production, $oid->group, 'ru');
+            $response = $api->getBMWSubGroups($id->type, $id->series, $id->body, $id->model, $id->market, $id->rule, $id->transmission, $id->production, $id->group, 'ru');
             $car->subgroups = $response->aData;
             $car->info = $response->modelInfo;
-            $car->url = "/illustration/?cat=bmw&mark={$oid->mark}&type={$oid->type}&series={$oid->series}&body={$oid->body}&model={$oid->model}&market={$oid->market}&rule={$oid->rule}&transmission={$oid->transmission}&production={$oid->production}&group={$oid->group}";
+            $car->url = "/illustration/?cat=bmw&mark={$id->mark}&type={$id->type}&series={$id->series}&body={$id->body}&model={$id->model}&market={$id->market}&rule={$id->rule}&transmission={$id->transmission}&production={$id->production}&group={$id->group}";
             break;
         case 'nissan':
             $api = new \NIS();
-            $oid->model = isset($_GET['model']) ? $_GET['model'] : '';
-            $oid->market = isset($_GET['market']) ? $_GET['market'] : '';
-            $oid->mark = (strpos(strtolower($oid->market), 'inf') > 1 ) ? 'infiniti' : 'nissan';
-            $oid->group = isset($_GET['group']) ? $_GET['group'] : '';
-            $oid->modification = isset($_GET['modification']) ? $_GET['modification'] : '';
+            $id->model = isset($_GET['model']) ? $_GET['model'] : '';
+            $id->market = isset($_GET['market']) ? $_GET['market'] : '';
+            $id->mark = (strpos(strtolower($id->market), 'inf') > 1 ) ? 'infiniti' : 'nissan';
+            $id->group = isset($_GET['group']) ? $_GET['group'] : '';
+            $id->modification = isset($_GET['modification']) ? $_GET['modification'] : '';
 
-            $response = $api->getNisGroup($oid->market, $oid->model, $oid->modification, $oid->group);
+            $response = $api->getNisGroup($id->market, $id->model, $id->modification, $id->group);
             $car->image = $response->Img;
             $car->subgroups = $response->aGroup;
-            $car->url = "/illustration/?cat=nissan&market={$oid->market}&model={$oid->model}&modification={$oid->modification}&group={$oid->group}";
+            $car->url = "/illustration/?cat=nissan&market={$id->market}&model={$id->model}&modification={$id->modification}&group={$id->group}";
             break;
         case 'toyota':
             // $api = new \TOY();
@@ -601,113 +606,13 @@ add_filter('sage/template/subgroups/data', function($data) {
 
     $data = [
         'catalog' => $catalog,
-        'oid' => $oid,
+        'oid' => $id,
         'car' => $car
     ];
 
     return $data;
 });
-add_filter('sage/template/illustration/data', function($data) {
-    $catalog = isset($_GET['cat']) ? $_GET['cat'] : '';
-    $oid = new \StdClass();
-    $oid->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
-    $oid->model = isset($_GET['model']) ? $_GET['model'] : '';
-    $oid->market = isset($_GET['market']) ? $_GET['market'] : '';
-    $oid->production = isset($_GET['production']) ? $_GET['production'] : '';
-    $oid->group = isset($_GET['group']) ? $_GET['group'] : '';
-    $oid->subgroup = isset($_GET['subgroup']) ? $_GET['subgroup'] : '';
-    $car = new \StdClass();
-
-    // Обязательно к применению
-    include( get_theme_root() . '/autos/vendor/autodealer/_lib.php' );
-    include( get_theme_root() . "/autos/vendor/autodealer/{$catalog}/api.php" );
-
-    switch ($catalog) {
-        case 'fiat':
-            $api = new \Fiat();
-            $oid->table = isset($_GET['table']) ? urldecode(base64_decode($_GET['table'])) : '';
-            $response = $api->getFIATPartDrawData($oid->production, $oid->group, $oid->subgroup, $oid->table);
-            $variant = $response->partDrawData->variants[0]->variante;
-            $car->parts = $response;
-            $response = $api->getFIATDraw($oid->mark, $oid->model, $oid->production, $oid->group, $oid->subgroup, $oid->table, $variant, 0.5);
-            $car->illustration = $response;
-            break;
-        case 'etka':
-            $api = new \ETKA();
-            $oid->production_year = isset($_GET['production_year']) ? $_GET['production_year'] : '';
-            $oid->dir = isset($_GET['dir']) ? $_GET['dir'] : 'R';
-            $oid->code = isset($_GET['code']) ? $_GET['code'] : '';
-            $oid->graphic = isset($_GET['graphic']) ? $_GET['graphic'] : '';
-            $response = $api->getETKAIllustration($oid->mark, $oid->market, $oid->model, $oid->production_year, $oid->code, $oid->dir, $oid->group, $oid->subgroup, $oid->graphic, 0.5);
-            $car->illustration = $response;
-            $car->url = "/illustration/?cat={ $catalog }&mark={ $oid->mark }&market={ $oid->market }&model={ $oid->model }&production_year={ $oid->production_year }&code={ $oid->code }";
-            break;
-        case 'bmw':
-            $api = new \BMW();
-            $oid->mark   = $api->rcv('mark');
-            $oid->type   = $api->rcv('type');
-            $oid->series = $api->rcv('series');
-            $oid->body   = $api->rcv('body');
-            $oid->model  = $api->rcv('model');
-            $oid->market = $api->rcv('market');
-            $oid->rule   = $api->rcv('rule');
-            $oid->trans  = $api->rcv('transmission');
-            $oid->prod   = $api->rcv('production');
-            $oid->group  = $api->rcv('group');
-            $oid->graphic= $api->rcv('graphic');
-
-            $response = $api->getBMWDetailsMap($oid->type,$oid->series,$oid->body,$oid->model,$oid->market,$oid->rule,$oid->trans,$oid->prod,$oid->group,$oid->graphic, "ru");
-            $car->aLabels   = $response->labels;
-            $car->aDetails  = $response->details;
-            $car->aComments = $response->comments;
-            $car->imgInfo = $response->imgInfo;
-            $car->url = "/illustration/?cat=bmw&mark={$oid->mark}&type={$oid->type}&series={$oid->series}&body={$oid->body}&model={$oid->model}&market={$oid->market}&rule={$oid->rule}&transmission={$oid->trans}&production={$oid->prod}&group={$oid->group}";
-            break;
-        case 'nissan':
-            $api = new \NIS();
-            $oid->modification = isset($_GET['modification']) ? $_GET['modification'] : '';
-            $oid->figure = $api->rcv('figure');
-            $oid->subimage = '';
-            $oid->sec = '';
-            $response = $api->getNISPic($oid->market, $oid->model, $oid->modification, $oid->group, $oid->figure, $oid->subimage, $oid->sec);
-
-            $car->illustration = $response;
-            $car->nextUrl = "/detail/?cat=nissan&market={$oid->market}&model={$oid->model}&modif={$oid->modification}&group={$oid->group}&figure={$oid->figure}&subfig=";
-            $car->nextSecUrl = "/illustration/?cat=nissan&market={$oid->market}&model={$oid->model}&modif={$oid->modification}&group={$oid->group}&figure={$oid->figure}&subfig=";
-            $car->secUrl = "/illustration/?cat=nissan&market={$oid->market}&model={$oid->model}&modif={$oid->modification}&group={$oid->group}&figure=";
-
-            break;
-        case 'toyota':
-            $api = new \TOY();
-            $oid->compl = isset($_GET['compl']) ? $_GET['compl'] : '';
-            $oid->option = isset($_GET['option']) ? $_GET['option'] : '';
-            $oid->code = isset($_GET['code']) ? $_GET['code'] : '';
-            $oid->group = isset($_GET['group']) ? $_GET['group'] : '';
-            $oid->graphic = isset($_GET['graphic']) ? $_GET['graphic'] : '';
-            // дополнительные данные
-            $oid->vin = isset($_GET['vin']) ? $_GET['vin'] : '';
-            $oid->vdate = isset($_GET['vdate']) ? $_GET['vdate'] : '';
-            $oid->siyopt = isset($_GET['siyopt']) ? $_GET['siyopt'] : '';
-
-            $car->getString = ""
-                . ( ( $oid->vin )    ? "&vin=$oid->vin"      : "" )
-                . ( ( $oid->vdate )  ? "&vdate=$oid->vdate"  : "" )
-                . ( ( $oid->siyopt ) ? "&siyopt=$oid->siyopt" : "" );
-            break;
-        default:
-            echo 'Error';
-            break;
-    }
-
-    $data = [
-        'catalog' => $catalog,
-        'oid' => $oid,
-        'car' => $car
-    ];
-
-    return $data;
-});
-// Aftermarket
+// Aftermarket + ADC
 add_filter('sage/template/equipments/data', function($data) {
     $catalog = isset($_GET['cat']) ? $_GET['cat'] : '';
 
@@ -734,44 +639,73 @@ add_filter('sage/template/equipments/data', function($data) {
     return $data;
 });
 add_filter('sage/template/tree/data', function($data) {
-
+    $id = new \StdClass();
+    $car = new \StdClass();
     $catalog = isset($_GET['cat']) ? $_GET['cat'] : '';
 
     /** Обязательно к применению */
     include( get_theme_root() . '/autos/vendor/autodealer/_lib.php' );
     include( get_theme_root() . "/autos/vendor/autodealer/{$catalog}/api.php" );
 
-    $api    = new \TD();
-    $id     = new \StdClass();
-    $car    = new \StdClass();
-    $id->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
-    $id->model = isset($_GET['model']) ? $_GET['model'] : '';
-    $id->equipment = isset($_GET['equipment']) ? $_GET['equipment'] : '';
+    switch ($catalog) {
+        case 'td':
+            $api = new \TD();
+            $id->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
+            $id->model = isset($_GET['model']) ? $_GET['model'] : '';
+            $id->equipment = isset($_GET['equipment']) ? $_GET['equipment'] : '';
 
-    $response = $api->getTDTree('pc', $id->mark, $id->model, $id->equipment);
+            $response = $api->getTDTree('pc', $id->mark, $id->model, $id->equipment);
 
-    usort($response->tree, function($a, $b) {
-        if ( $a->str_level == $b->str_level ) {
-            return 0;
-        }
-        return $a->str_level > $b->str_level ? -1 : 1;
-    });
-    $min = end($response->tree)->str_level;
+            usort($response->tree, function($a, $b) {
+                if ( $a->str_level == $b->str_level ) {
+                    return 0;
+                }
+                return $a->str_level > $b->str_level ? -1 : 1;
+            });
+            $min = end($response->tree)->str_level;
 
-    $response->tree = array_combine(array_column($response->tree, 'str_id'), $response->tree);
-    foreach ($response->tree as $value) {
-        if ($value->str_level == $min ) {
-            $value->ready = true;
-        }
-        $current = $value;
-        $response->tree[$current->str_id_parent]->childrens[] = $current;
-    };
-    $car->tree = array_filter($response->tree, function($item) { return isset($item->ready); });
+            $response->tree = array_combine(array_column($response->tree, 'str_id'), $response->tree);
+            foreach ($response->tree as $value) {
+                if ($value->str_level == $min ) {
+                    $value->ready = true;
+                }
+                $current = $value;
+                $response->tree[$current->str_id_parent]->childrens[] = $current;
+            };
+            $car->tree = array_filter($response->tree, function($item) { return isset($item->ready); });
+            break;
+        case 'adc':
+            $id->model = isset($_GET['model']) ? $_GET['model'] : '';
+            $api = new \ADC();
+            $response = $api->getTreeList($id->model, false);
+            usort($response->details, function($a, $b) {
+                if ( $a->parent_id == $b->parent_id ) {
+                    return 0;
+                }
+                return $a->parent_id > $b->parent_id ? -1 : 1;
+            });
+            $response->details = array_combine(array_column($response->details, 'id'), $response->details);
+            foreach ($response->details as $value) {
+                if ($value->parent_id == 0 ) {
+                    $value->ready = true;
+                }
+                $current = $value;
+                $response->details[$current->parent_id]->childrens[] = $current;
+            };
+            $car->details = array_filter($response->details, function($item) { return isset($item->ready); });
+            $car->url = "/illustration/?cat=adc&model={$id->model}";
+
+            break;
+        default:
+            break;
+    }
+
+
 
     $data = [
-        'catalog' => $catalog,
         'id' => $id,
-        'car' => $car
+        'car' => $car,
+        'catalog' => $catalog
     ];
 
     return $data;
@@ -801,6 +735,119 @@ add_filter('sage/template/details/data', function($data) {
         'catalog'   => $catalog,
         'id'        => $id,
         'car'       => $car
+    ];
+
+    return $data;
+});
+
+add_filter('sage/template/illustration/data', function($data) {
+    $id = new \StdClass();
+    $catalog = isset($_GET['cat']) ? $_GET['cat'] : '';
+    $id->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
+    $id->model = isset($_GET['model']) ? $_GET['model'] : '';
+    $id->market = isset($_GET['market']) ? $_GET['market'] : '';
+    $id->production = isset($_GET['production']) ? $_GET['production'] : '';
+    $id->group = isset($_GET['group']) ? $_GET['group'] : '';
+    $id->subgroup = isset($_GET['subgroup']) ? $_GET['subgroup'] : '';
+    $car = new \StdClass();
+
+    // Обязательно к применению
+    include( get_theme_root() . '/autos/vendor/autodealer/_lib.php' );
+    include( get_theme_root() . "/autos/vendor/autodealer/{$catalog}/api.php" );
+
+    switch ($catalog) {
+        case 'fiat':
+            $api = new \Fiat();
+            $id->table = isset($_GET['table']) ? urldecode(base64_decode($_GET['table'])) : '';
+            $response = $api->getFIATPartDrawData($id->production, $id->group, $id->subgroup, $id->table);
+            $variant = $response->partDrawData->variants[0]->variante;
+            $car->parts = $response;
+            $response = $api->getFIATDraw($id->mark, $id->model, $id->production, $id->group, $id->subgroup, $id->table, $variant, 0.5);
+            $car->illustration = $response;
+            break;
+        case 'etka':
+            $api = new \ETKA();
+            $id->production_year = isset($_GET['production_year']) ? $_GET['production_year'] : '';
+            $id->dir = isset($_GET['dir']) ? $_GET['dir'] : 'R';
+            $id->code = isset($_GET['code']) ? $_GET['code'] : '';
+            $id->graphic = isset($_GET['graphic']) ? $_GET['graphic'] : '';
+            $response = $api->getETKAIllustration($id->mark, $id->market, $id->model, $id->production_year, $id->code, $id->dir, $id->group, $id->subgroup, $id->graphic, 0.5);
+            $car->illustration = $response;
+            $car->url = "/illustration/?cat={ $catalog }&mark={ $id->mark }&market={ $id->market }&model={ $id->model }&production_year={ $id->production_year }&code={ $id->code }";
+            break;
+        case 'bmw':
+            $api = new \BMW();
+            $id->mark   = $api->rcv('mark');
+            $id->type   = $api->rcv('type');
+            $id->series = $api->rcv('series');
+            $id->body   = $api->rcv('body');
+            $id->model  = $api->rcv('model');
+            $id->market = $api->rcv('market');
+            $id->rule   = $api->rcv('rule');
+            $id->trans  = $api->rcv('transmission');
+            $id->prod   = $api->rcv('production');
+            $id->group  = $api->rcv('group');
+            $id->graphic= $api->rcv('graphic');
+
+            $response = $api->getBMWDetailsMap($id->type,$id->series,$id->body,$id->model,$id->market,$id->rule,$id->trans,$id->prod,$id->group,$id->graphic, "ru");
+            $car->aLabels   = $response->labels;
+            $car->aDetails  = $response->details;
+            $car->aComments = $response->comments;
+            $car->imgInfo = $response->imgInfo;
+            $car->url = "/illustration/?cat=bmw&mark={$id->mark}&type={$id->type}&series={$id->series}&body={$id->body}&model={$id->model}&market={$id->market}&rule={$id->rule}&transmission={$id->trans}&production={$id->prod}&group={$id->group}";
+            break;
+        case 'nissan':
+            $api = new \NIS();
+            $id->modification = isset($_GET['modification']) ? $_GET['modification'] : '';
+            $id->figure = $api->rcv('figure');
+            $id->subimage = '';
+            $id->sec = '';
+            $response = $api->getNISPic($id->market, $id->model, $id->modification, $id->group, $id->figure, $id->subimage, $id->sec);
+
+            $car->illustration = $response;
+            $car->nextUrl = "/detail/?cat=nissan&market={$id->market}&model={$id->model}&modif={$id->modification}&group={$id->group}&figure={$id->figure}&subfig=";
+            $car->nextSecUrl = "/illustration/?cat=nissan&market={$id->market}&model={$id->model}&modif={$id->modification}&group={$id->group}&figure={$id->figure}&subfig=";
+            $car->secUrl = "/illustration/?cat=nissan&market={$id->market}&model={$id->model}&modif={$id->modification}&group={$id->group}&figure=";
+
+            break;
+        case 'toyota':
+            $api = new \TOY();
+            $id->compl = isset($_GET['compl']) ? $_GET['compl'] : '';
+            $id->option = isset($_GET['option']) ? $_GET['option'] : '';
+            $id->code = isset($_GET['code']) ? $_GET['code'] : '';
+            $id->group = isset($_GET['group']) ? $_GET['group'] : '';
+            $id->graphic = isset($_GET['graphic']) ? $_GET['graphic'] : '';
+            // дополнительные данные
+            $id->vin = isset($_GET['vin']) ? $_GET['vin'] : '';
+            $id->vdate = isset($_GET['vdate']) ? $_GET['vdate'] : '';
+            $id->siyopt = isset($_GET['siyopt']) ? $_GET['siyopt'] : '';
+
+            $car->getString = ""
+                . ( ( $id->vin )    ? "&vin=$id->vin"      : "" )
+                . ( ( $id->vdate )  ? "&vdate=$id->vdate"  : "" )
+                . ( ( $id->siyopt ) ? "&siyopt=$id->siyopt" : "" );
+            break;
+        case 'adc':
+            $id->model = isset($_GET['model']) ? $_GET['model'] : '';
+            $id->tree = isset($_GET['tree']) ? $_GET['tree'] : '';
+            $id->jump = isset($_GET['jump']) ? $_GET['jump'] : '';
+            $api = new \ADC();
+            $response = $api->getDetails($id->model, $id->tree, $id->jump);
+            $car->illustration = $response->mapImg;
+            $car->details = $response->details;
+            $car->next = $response->nav->next;
+            $car->prev = $response->nav->prev;
+
+            break;
+        default:
+            echo 'Error';
+            break;
+    }
+
+    $data = [
+        'catalog' => $catalog,
+        'oid' => $id,
+        'car' => $car
     ];
 
     return $data;

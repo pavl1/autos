@@ -1,4 +1,4 @@
-@if (strtolower($oid->market) != 'js')
+@if (strtolower($id->market) != 'js')
     <img src="{{ $car->image }}" alt="">
 @endif
 

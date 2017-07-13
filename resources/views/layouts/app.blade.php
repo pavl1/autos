@@ -1,7 +1,7 @@
 <!doctype html>
 <html @php(language_attributes())>
 @include('partials.head')
-<body @php(body_class())>
+<body id="application" @php(body_class())>
     @php(do_action('get_header'))
     @include('partials.header')
     @include('partials.sidemenu')

@@ -14,7 +14,7 @@ $rootZoom = "imageLayout";
 
 foreach( $car->parts->partDrawData->variants as $pd ){
     $tabs[] = [
-        'url' => "/illustration/?cat=$catalog&mark={ $oid->mark }&model={ $oid->model }&production={ $oid->production }&group={ $oid->group }&subGroup={ $oid->subgroup }&tableCod=".urlencode(base64_encode($oid->table))."&variant=".$pd->variante,
+        'url' => "/illustration/?cat=$catalog&mark={ $id->mark }&model={ $id->model }&production={ $id->production }&group={ $id->group }&subGroup={ $id->subgroup }&tableCod=".urlencode(base64_encode($id->table))."&variant=".$pd->variante,
         'description' => $pd->variante
     ];
 }
