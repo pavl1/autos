@@ -7,7 +7,7 @@
             {{ $subgroup->tsbem_text }}
             {{ $subgroup->tsmoa_text }}
         </span>
-        <a class="model-link" href="/illustration/?cat={{ $catalog }}&mark={{ $id->mark }}&market={{ $id->market }}&model={{ $id->model }}&production_year={{ $id->production_year }}&code={{ $id->code }}&group={{ $id->group }}&subgroup={{ $subgroup->hg_ug }}&graphic={{ $subgroup->bildtafel2 }}">
+        <a class="model-link" href="/illustration/?cat={{ $catalog }}&mark={{ $oid->mark }}&market={{ $oid->market }}&model={{ $oid->model }}&production_year={{ $oid->production_year }}&code={{ $oid->code }}&group={{ $oid->group }}&subgroup={{ $subgroup->hg_ug }}&graphic={{ $subgroup->bildtafel2 }}">
             {{ $subgroup->tsben_text }}
         </a>
     </li>

@@ -14,6 +14,7 @@ use Roots\Sage\Template\BladeProvider;
 add_action('wp_enqueue_scripts', function () {
     wp_enqueue_style('sage/main.css', asset_path('styles/main.css'), false, null);
     wp_enqueue_script('sage/main.js', asset_path('scripts/main.js'), ['jquery'], null, true);
+    wp_enqueue_script( 'wp-util' );
 }, 100);
 
 /**
@@ -167,3 +168,12 @@ add_action('after_setup_theme', function () {
  * Init config
  */
 sage()->bindIf('config', Config::class, true);
+
+add_action('wp_head', function() {
+    $variables = array (
+        'ajax' => admin_url('admin-ajax.php'),
+        'is_mobile' => wp_is_mobile()
+        // Тут обычно какие-то другие переменные
+    );
+    echo '<script type="text/javascript">window.wp_data = ', json_encode($variables), ';</script>';
+});

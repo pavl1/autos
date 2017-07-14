@@ -2,19 +2,19 @@
 
 $oTOY = new \TOY();
 
-$mark    = $id->mark;
-$market  = $id->market;
-$model   = $id->model;
-$compl   = $id->compl;
-$opt     = $id->option;
-$code    = $id->code;
-$group   = $id->group;
-$graphic = $id->graphic;
+$mark    = $oid->mark;
+$market  = $oid->market;
+$model   = $oid->model;
+$compl   = $oid->compl;
+$opt     = $oid->option;
+$code    = $oid->code;
+$group   = $oid->group;
+$graphic = $oid->graphic;
 
 /// Вспомогательные данные
-$vin       = $id->vin;
-$vdate     = $id->vdate;
-$siyopt    = $id->siyopt;
+$vin       = $oid->vin;
+$vdate     = $oid->vdate;
+$siyopt    = $oid->siyopt;
 /// При наличие строим дополнительную строку запроса
 $getString = $car->getString;
 

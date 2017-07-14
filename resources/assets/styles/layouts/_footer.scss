@@ -26,7 +26,8 @@
             width: 2rem;
             height: 2rem;
             bottom: 0;
-            transform: translateY(75%) translateX(35%) rotate(45deg) ;
+            left: 50%;
+            transform: translateY(75%) translateX(-50%) rotate(45deg) ;
             transition: left 0.2s ease;
 
         }

@@ -97,7 +97,7 @@
     }
     function labelClick(label,scroll){
 
-        var id = jQueryA2D(label).attr('id').substr(1),
+        var id = jQueryA2D(label).attr('oid').substr(1),
             tr = jQueryA2D('tr[data-position="'+id+'"]')
         ; ///console.log( id );
 

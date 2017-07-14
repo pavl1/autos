@@ -1,4 +1,4 @@
-@if ($id->market != 'jp')
+@if ($oid->market != 'jp')
     <img src="{{ $car->image }}" alt="">
 @endif
 <table>

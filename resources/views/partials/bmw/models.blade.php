@@ -11,7 +11,7 @@
                         <ul>
                             @foreach ($models->ModelInfo as $model)
                                 <li>
-                                    <a href="/options/?cat={{ $catalog }}&mark={{ $id->mark }}&type={{ $id->type }}&series={{ $id->series }}&body={{ $body->code }}&model={{ $model->ModelID }}&market={{ $models->MarketCode }}">
+                                    <a href="/options/?cat={{ $catalog }}&mark={{ $oid->mark }}&type={{ $oid->type }}&series={{ $oid->series }}&body={{ $body->code }}&model={{ $model->ModelID }}&market={{ $models->MarketCode }}">
                                         {{ $model->ModelCode }}
                                     </a>
                                 </li>

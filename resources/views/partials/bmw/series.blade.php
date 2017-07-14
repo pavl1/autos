@@ -1,10 +1,25 @@
-<ul class="models">
+<script type="text/html" id="models-list">
+    @verbatim
+    @endverbatim
+</script>
+
+<div class="series">
+
     @foreach ($car->series as $series)
-        <li class="model-item">
-            <a class="model-link" href="/models/?cat={{ $catalog }}&mark={{ $id->mark }}&type={{ $id->type }}&series={{ $series->Baureihe }}">
-                <img src="{{ $series->imgUrl }}" alt="">
-                <span>{{ $series->ExtBaureihe }}</span>
+        <div class="series-container">
+            <a class="series-link" href="#{{ $series->Baureihe }}" aria-expanded="false"
+                data-toggle="collapse"
+                data-catalog="{{ $catalog }}"
+                data-oid="{{ json_encode($oid) }}"
+                data-series="{{ $series->Baureihe}}"
+            >
+                <span class="col">{{ explode(' ', $series->ExtBaureihe)[0] }}</span>
+                <span class="col">{{ explode(' ', $series->ExtBaureihe)[1] }}</span>
             </a>
-        </li>
+            <div class="series-models collapse" id="{{ $series->Baureihe }}">
+                Комплектация
+                <img src="{{ $series->imgUrl }}" alt="">
+            </div>
+        </div>
     @endforeach
-</ul>
+</div>

@@ -84,3 +84,23 @@
     }
 
 }
+.series {
+    &-link {
+        display: flex;
+        flex-flow: row nowrap;
+        background-color: rgb(123, 160, 211);
+
+        span {
+            border-width: 1px;
+            border-color: rgb(196, 196, 196);
+            border-style: solid;
+        }
+    }
+
+    &-models {
+        border-width: 1px;
+        border-color: rgb(196, 196, 196);
+        border-style: solid;
+    }
+
+}
