@@ -1,4 +1,4 @@
-@if ($catalog == 'fiat')
+@if ($oid->catalog == 'fiat')
     <table>
         <thead>
             <tr>
@@ -21,12 +21,12 @@
                             <img src="{{ $subitem->img_path }}" alt="" style="max-width: 100px">
                         </td>
                         <td>
-                            <a href="/illustration/?cat={{ $catalog }}&mark={{ $oid->mark }}&model={{ $oid->model }}&production={{ $oid->production }}&group={{ $oid->group }}&subgroup={{ $subgroup->subGroup->sgrp_cod }}&table={{ urlencode(base64_encode($subitem->table_cod)) }}">
+                            <a href="/illustration/?cat={{ $oid->catalog }}&mark={{ $oid->mark }}&model={{ $oid->model }}&production={{ $oid->production }}&group={{ $oid->group }}&subgroup={{ $subgroup->subGroup->sgrp_cod }}&table={{ urlencode(base64_encode($subitem->table_cod)) }}">
                                 {{ $subitem->dsc }}
                             </a>
                         </td>
                         <td>
-                            <a href="/illustration/?cat={{ $catalog }}&mark={{ $oid->mark }}&model={{ $oid->model }}&production={{ $oid->production }}&group={{ $oid->group }}&subgroup={{ $subgroup->subGroup->sgrp_cod }}&table={{ urlencode(base64_encode($subitem->table_cod)) }}">
+                            <a href="/illustration/?cat={{ $oid->catalog }}&mark={{ $oid->mark }}&model={{ $oid->model }}&production={{ $oid->production }}&group={{ $oid->group }}&subgroup={{ $subgroup->subGroup->sgrp_cod }}&table={{ urlencode(base64_encode($subitem->table_cod)) }}">
                                 {{ $subitem->pattern }}
                             </a>
                         </td>

@@ -2,7 +2,7 @@
     width: 100%;
     border-top: 2px solid $brand-primary;
     margin-top: auto;
-    background: scale-color($brand-gray, $lightness: +20%);
+    background: scale-color($brand-gray-light, $lightness: +20%);
     position: relative;
 
     .nav {
@@ -26,10 +26,9 @@
             width: 2rem;
             height: 2rem;
             bottom: 0;
-            left: 50%;
+            left: 0;
             transform: translateY(75%) translateX(-50%) rotate(45deg) ;
             transition: left 0.2s ease;
-
         }
     }
 

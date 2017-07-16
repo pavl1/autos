@@ -39,6 +39,7 @@
       "exports": "always-multiline",
       "functions": "ignore",
     }],
-    "no-console": "warn"
+    "no-console": "warn",
+    "no-undef": "warn"
   }
 }

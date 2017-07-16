@@ -2,8 +2,8 @@
 @section('content')
     @while(have_posts()) @php(the_post())
         @include('partials.page-header')
-        @if ($catalog)
-            @include("partials.$catalog.groups")
+        @if ($oid->catalog)
+            @include("partials.$oid->catalog.groups")
         @endif
     @endwhile
 @endsection
