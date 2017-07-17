@@ -9,10 +9,6 @@ export default {
             };
 
         $('.series-link').on('click', models);
-        $('.back-to-options').on('click', () => {
-            console.log(App);
-            options(App.options.current);
-        });
 
         function models(e) {
             let oid = JSON.parse(e.currentTarget.dataset.oid);
@@ -42,9 +38,8 @@ export default {
             $('.model-item').on('click', options);
         }
 
-        function options(e) {
+        function options(e, back = false) {
             let oid = JSON.parse(e.currentTarget.dataset.oid);
-
             if ( _.isEmpty( App.options[ oid.model ]) ) {
                 wp.ajax.send( 'get_options', {
                     data: { oid: oid },
@@ -54,10 +49,10 @@ export default {
                     optionsSuccess(response);
                 } );
             } else {
-                optionsSuccess(App.options[ oid.model ]);
+                optionsSuccess(App.options[ oid.model ], back);
             }
         }
-        function optionsSuccess(response) {
+        function optionsSuccess(response, back = false) {
             let template = wp.template( 'options-list' ),
                 target = document.querySelector('.modal-content');
 
@@ -65,14 +60,13 @@ export default {
                 oid: response.oid,
                 options: response.car.options,
             });
-            $('.modal').modal('show');
+            if ( ! back ) $('.modal').modal('show');
             $('.option-link').off('click');
             $('.option-link').on('click', production);
         }
 
         function production(e) {
             let oid = JSON.parse(e.currentTarget.dataset.oid);
-
             if ( _.isEmpty(App.productions[ oid.rule + oid.transmission ]) ) {
                 wp.ajax.send( 'get_production', {
                     data: { oid: oid },
@@ -81,7 +75,7 @@ export default {
                     productionSuccess(response);
                 } );
             } else {
-                productionSuccess(App.models[ oid.rule + oid.transmission ]);
+                productionSuccess(App.productions[ oid.rule + oid.transmission ]);
             }
         }
         function productionSuccess(response) {
@@ -92,6 +86,9 @@ export default {
                 oid: response.oid,
                 production: response.car.production,
                 url: response.car.url,
+            });
+            $('.back-to-options').on('click', () => {
+                options(App.options.current, true);
             });
         }
 

@@ -60,7 +60,7 @@
     </div>
     <div class="modal-body">
         <a class="back-to-options" href="#">Вернуться к выбору опций</a>
-        <table>
+        <table class="production-table">
             <# let  startYear = data.production.startYear,
             endYear = data.production.endYear,
             startMonth = data.production.startMonth,
@@ -71,7 +71,7 @@
                 <tr>
                     <td>{{ y }}</td>
                     <# for ( m = 1; m <= 12; m++ ) { #>
-                        <td class="production-cell">
+                        <td class="production-item">
                             <# if ( y == startYear && m == startMonth ) d = startDay;
                             else if ( y == endYear && m == endYear ) d = endYear;
                             else d = '00'; #>
@@ -86,7 +86,7 @@
                 </tr>
             <# } #>
         </table>
-        <a class="production-link" href="{{ data.url }}&production=any">Не важно</a>
+        <a class="production-link-any" href="{{ data.url }}&production=any">Не важно</a>
     </div>
     <div class="modal-footer">
     </div>

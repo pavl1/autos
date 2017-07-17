@@ -3,8 +3,8 @@
     var jQueryA2D = jQuery;
 </script>
 <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-<script src="{{ get_template_directory_uri() }}/vendor/autodealer/media/js/ZeroClipboard.js"></script>
-<script src="{{ get_template_directory_uri() }}/vendor/autodealer/media/js/base.js"></script>
+<script src="{{ get_theme_root_uri() }}/autos/vendor/autodealer/media/js/ZeroClipboard.js"></script>
+<script src="{{ get_theme_root_uri() }}/autos/vendor/autodealer/media/js/base.js"></script>
 
 <script>
     /**

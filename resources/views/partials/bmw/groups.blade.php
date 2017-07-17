@@ -1,12 +1,32 @@
-@include('helpers.info.bmw')
+{{-- @include('helpers.info.bmw') --}}
+<script type="text/html" id="tmpl-subgroups">
+    @verbatim
+        Агрегат
+        <ul class="subgroups-list">
+            <# _.each(data.subgroups, (subgroup) => { #>
+                <li class="subgroups-item col"><a class="subgroups-link" href="{{ data.url }}&graphic={{ subgroup.code }}">{{ subgroup.name }}</a></li>
+            <# }) #>
+        </ul>
+    @endverbatim
+</script>
 
-<ul class="models">
-    @foreach( $car->groups AS $v )
-        <li class="model-item">
-            <a href="{{ $car->url }}&group={{ $v->code}}" class="fl defBorder">
-                <img src="{{ $v->imgUrl }}"><br/>
-                <span>{{ $v->name }}</span>
+
+<div class="groups">
+
+    <input class="groups-search" type="text" name="" value="" placeholder="Выберите / введите узел агрегата">
+
+    @foreach( $car->groups AS $group )
+        @php( $oid->group = $group->code )
+        <div class="groups-item">
+            <a class="groups-link col" href="#group-{{ $group->code}}" aria-expanded="false"
+                data-toggle="collapse"
+                data-oid="{{ json_encode($oid) }}"
+            >
+                {{ $group->name }}
             </a>
-        </li>
+            <div class="subgroups collapse" id="group-{{ $group->code }}">
+
+            </div>
+        </div>
     @endforeach
-</ul>
+</div>

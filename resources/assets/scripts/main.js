@@ -8,6 +8,7 @@ import common from './routes/common';
 import home from './routes/home';
 import aboutUs from './routes/about';
 import series from './routes/series';
+import groups from './routes/groups';
 import illustration from './routes/illustration';
 
 /**
@@ -22,6 +23,7 @@ const routes = new Router({
   /** About Us page, note the change from about-us to aboutUs. */
   aboutUs,
   series,
+  groups,
   illustration,
 });
 

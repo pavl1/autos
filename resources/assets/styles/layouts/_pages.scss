@@ -1,3 +1,52 @@
+@mixin link() {
+    display: flex;
+    flex-flow: row nowrap;
+    background-color: $white;
+    transition: background-color 0.3s ease;
+}
+@mixin link-expanded() { background-color: rgb(123, 160, 211) }
+@mixin link-text() {
+    border-width: 1px;
+    border-color: rgb(196, 196, 196);
+    border-style: solid;
+}
+@mixin search() {
+    width: 100%;
+    margin: 1rem 0;
+    padding: 0.5rem 1rem;
+    background-color: transparent;
+    border: 1px solid $brand-black;
+    color: $brand-black;
+    text-align: center;
+
+    &:focus {
+        outline: none;
+        &::placeholder { color: transparent }
+    }
+
+    &::placeholder {
+        color: $brand-black;
+        text-align: center;
+        transition: color 0.3s ease;
+    }
+}
+@mixin collapse-block() {
+    border-width: 1px;
+    border-color: $brand-gray;
+    border-style: solid;
+    background: url(../images/arrow.png) 1rem 1rem no-repeat scale-color($brand-gray-light, $lightness: +40%);
+    padding: 0 2rem 0 4rem;
+}
+@mixin collapse-list {
+    padding: 0;
+    list-style: none;
+}
+@mixin collapse-item {
+    border: 1px solid $brand-gray;
+    background-color: $white;
+    cursor: pointer;
+}
+@mixin collapse-link {}
 .mark {
 
     &s {
@@ -86,42 +135,12 @@
 }
 .series {
     &-link {
-        display: flex;
-        flex-flow: row nowrap;
-        background-color: $white;
-        transition: background-color 0.3s ease;
-
-        &[aria-expanded='true'] {
-            background-color: rgb(123, 160, 211);
-        }
-
-        span {
-            border-width: 1px;
-            border-color: rgb(196, 196, 196);
-            border-style: solid;
-        }
+        @include link;
+        &[aria-expanded='true'] { @include link-expanded }
+        span { @include link-text }
     }
 
-    &-search {
-        width: 100%;
-        margin: 1rem 0;
-        padding: 0.5rem 1rem;
-        background-color: transparent;
-        border: 1px solid $brand-black;
-        color: $brand-black;
-        text-align: center;
-
-        &:focus {
-            outline: none;
-            &::placeholder { color: transparent }
-        }
-
-        &::placeholder {
-            color: $brand-black;
-            text-align: center;
-            transition: color 0.3s ease;
-        }
-    }
+    &-search { @include search }
 
     &-header {
         display: flex;
@@ -129,31 +148,80 @@
     }
 
     .model {
-        border-width: 1px;
-        border-color: $brand-gray;
-        border-style: solid;
-        background: url(../images/arrow.png) 1rem 1rem no-repeat scale-color($brand-gray-light, $lightness: +40%);
-        padding: 0 2rem 0 4rem;
+        @include collapse-block;
 
-        &-market {}
+        &-market { }
+        &-list { @include collapse-list }
+        &-item { @include collapse-item }
+    }
+    .option {
         &-list {
-            padding: 0;
             list-style: none;
+            padding: 0;
         }
-        &-item {
-            border: 1px solid $brand-gray;
+    }
+    .production {
+        &-table {
+            width: 100%;
             background-color: $white;
-            cursor: pointer;
 
+            td {
+                border: 1px solid $brand-gray;
+                text-align: center;
+                padding: 0;
+            }
+        }
+        &-link {
+            display: inline-block;
+            padding: 1px;
+            height: 100%;
+            width: 100%;
+            color: $brand-primary;
+            background-color: transparent;
+            transition: background-color 0.3s ease, color 0.3s ease;
+
+            &:hover {
+                background-color: $brand-primary;
+                color: $white;
+            }
         }
     }
-
-    .options {
-        &-list {
-            list-style: none;
-            padding: 0;
-        }
+}
+.groups {
+    &-link {
+        @include link;
+        @include link-text;
+        &[aria-expanded='true'] { @include link-expanded }
     }
-    .option { }
+    &-search { @include search }
 
+    .subgroups {
+        @include collapse-block;
+
+        &-list { @include collapse-list }
+        &-item { @include collapse-item }
+        &-link { @include collapse-link }
+    }
+}
+.illustration {
+    &-image {
+        position: relative;
+        overflow: hidden;
+        height: 500px;
+        background-color: $white;
+        border: 3px solid $brand-gray-dark;
+    }
+    &-zoomer {
+        position: absolute;
+        display: flex;
+        flex-flow: row nowrap;
+        justify-content: space-around;
+        align-items: center;
+        z-index: 100;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 50px;
+        background: $brand-gray-light;
+    }
 }

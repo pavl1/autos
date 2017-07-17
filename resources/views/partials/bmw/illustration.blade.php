@@ -27,19 +27,19 @@ $url = $car->url;
 
 ?>
 
-@php ( include( get_theme_root() . "/autos/vendor/autodealer/helpers/illustration.php" ) )
-<div id="detailsMap" class="AutoDealer">
+@include('helpers.illustration')
+<div id="detailsMap" class="AutoDealer illustration">
 
     <div>
 
         <?php $px = 5; $py = 1; ///(оступы по умолчанию внутри метки на иллюстрации)?>
 
-        <div class="defBorder imgArea mb30" id="imageArea">
+        <div class="defBorder imgArea mb30 illustration-image" id="imageArea">
             <?php if( $percent<1 ){?>
                 <div class="isLimit">Превышен лимит показов в сутки (<?=$limit?>)</div>
             <?php }?>
-            <div id="imageLayout" style="position:absolute;left:0;top:0;width:<?=$width?>px;height:<?=$height?>px">
-                <canvas id="canvas" <?=$attrs?> style="margin:0;padding:0;"></canvas>
+            <div id="imageLayout" class="image-layout" style="position:absolute;left:0;top:0;width:<?=$width?>px;height:<?=$height?>px">
+                <canvas id="canvas" class="image-canvas" <?=$attrs?> style="margin:0;padding:0;"></canvas>
                 <?php //*/
                 $prevNamber = FALSE;
                 foreach( $aLabels AS $_v ){
@@ -70,7 +70,7 @@ $url = $car->url;
                     </div>
                 <?php } //*/?>
             </div>
-            @php ( include( get_theme_root() . "/autos/vendor/autodealer/helpers/zoomer.php" ) )
+            @include('helpers.zoomer')
         </div>
 
         <div id="detailsList">
