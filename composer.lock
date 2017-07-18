@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "ea9fa1afa3655447aadf2168ebe1d9b4",
+    "content-hash": "8241cde7ece37587a4ec5b2ce0d1fbb4",
     "packages": [
         {
             "name": "composer/installers",
@@ -508,6 +508,48 @@
             "description": "The Illuminate View package.",
             "homepage": "https://laravel.com",
             "time": "2017-03-30T14:26:45+00:00"
+        },
+        {
+            "name": "markjaquith/wp-tlc-transients",
+            "version": "1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/markjaquith/WP-TLC-Transients.git",
+                "reference": "bdbe0691db6adaf08af0dee6c70ebebe881633d8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/markjaquith/WP-TLC-Transients/zipball/bdbe0691db6adaf08af0dee6c70ebebe881633d8",
+                "reference": "bdbe0691db6adaf08af0dee6c70ebebe881633d8",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "class-tlc-transient.php",
+                    "class-tlc-transient-update-server.php"
+                ],
+                "files": [
+                    "functions.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0+"
+            ],
+            "authors": [
+                {
+                    "name": "Mark Jaquith",
+                    "homepage": "http://markjaquith.com/"
+                }
+            ],
+            "description": "A WP transients interface with support for soft-expiration, background updating of the transients.",
+            "homepage": "https://github.com/markjaquith/WP-TLC-Transients",
+            "keywords": [
+                "cache",
+                "wordpress"
+            ],
+            "time": "2013-05-07T18:12:10+00:00"
         },
         {
             "name": "paragonie/random_compat",

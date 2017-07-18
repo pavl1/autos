@@ -1,125 +1,38 @@
 <?php
 
 namespace App;
+// TLC Transients
+include ( get_theme_root() . '/autos/vendor/markjaquith/wp-tlc-transients/class-tlc-transient.php' );
 
 add_filter('sage/template/frontpage/data', function($data) {
-    include( get_theme_root() . '/autos/vendor/autodealer/_lib.php' );
-    include( get_theme_root() . '/autos/vendor/autodealer/adc/api.php' );
-    include( get_theme_root() . "/autos/vendor/autodealer/td/api.php" );
 
-    $ADC = new \ADC();
-    $TD = new \TD();
-    $whitelist = ['acura', 'daihatsu', 'datsun', 'honda', 'isuzu', 'mazda', 'mitsubishi', 'subaru', 'suzuki', 'infiniti', 'nissan', 'lexus', 'scion', 'toyota', 'skoda', 'audi', 'volkswagen', 'bmw'];
-    $east = ['acura', 'daihatsu', 'datsun', 'honda', 'infiniti', 'isuzu', 'lexus', 'mazda', 'mitsubishi', 'nissan', 'scion', 'subaru', 'suzuki', 'toyota'];
-    $west = ['skoda', 'audi', 'bmw', 'volkswagen'];
-    /// Раскомментировав строку нижу, можно посмотреть что вернул сервер
-    // $ADC->e($oMarkList);
+    $items = tlc_transient( 'marks' )
+                ->expires_in( 1 )
+                ->updates_with( __NAMESPACE__ . '\get_marks' )
+                ->get();
+    if ( ! $items )
+        $items = get_marks();
 
-    $marksOriginal = array_filter($ADC->getMarkList(9)->marks, function($mark) use ($whitelist) {
-        if ( !in_array(strtolower($mark->mark_name), $whitelist) ) return false;
-        return 1000 != $mark->mark_id;
-    });
-    $marksAftermarket = array_filter($TD->getTDMarks('pc')->marks, function($mark) use ($whitelist) {
-        if ( !in_array( explode(' ', strtolower($mark->mfa_brand))[0], $whitelist) ) return false;
-        return true;
-    });
-
-    $marks = array();
-    array_walk($marksOriginal, function ($value) use (&$marks) {
-        if ( $value->external ) {
-            $arr = explode('/',$value->route);
-            $mark = end( $arr );
-            $entry = "models";
-            $iface = NULL;
-            $var  = 'mark';   /// Передаваемая переменная
-            if ( in_array($mark,['bmw','mini','moto','rr']) ){
-                $iface  = 'bmw';    /// Директория со скриптами
-                $action = 'series'; /// Входная точка
-                $entry = $action;
-            }
-            if( in_array($mark,['nissan','infiniti']) ){
-                $iface  = 'nissan';     /// Директория со скриптами
-                $action = 'markets';    /// Входная точка
-                $var    = 'mark';       /// Передаваемая переменная
-            }
-            if( in_array($mark,['nissan','infiniti']) ){
-                $iface  = 'nissan';  /// Директория со скриптами
-                $action = 'markets'; /// Входная точка
-                $var = 'mark';
-            }
-            if( in_array($mark,['toyota','lexus']) ){
-                $iface  = 'toyota';  /// Директория со скриптами
-                $action = 'markets'; /// Входная точка
-            }
-            if( in_array($mark,['audi','volkswagen','seat','skoda']) ){
-                $iface  = 'etka';    /// Директория со скриптами
-                $action = 'markets'; /// Входная точка
-            }
-            if( in_array($mark,['pc','cv']) ){
-                $iface  = 'td'; /// Директория со скриптами
-                $action = 'marks';       /// Входная точка
-                $var    = 'type';        /// Передаваемая переменная
-            }
-			$mcct=[];
-			if(preg_match('/^(kia|hyundai)(_(c|s))?$/si',$mark,$mcct)) {
-					$mark		= $mcct[1];
-					$iface  = 'mcct';
-					$action = 'index';
-					$var    = 'type='.(!empty($mcct[2])?$mcct[3]:'').'&mark';
-		    }
-            if( in_array($mark,['fiat', 'lancia', 'abarth', 'alfa-romeo']) ){
-                $iface = 'fiat';
-                $action = 'models';
-                $var = 'mark';
-            }
-            $entry =
-            $url = "/$entry/?cat=$iface&{$var}={$mark}";
-        }
-        else $url = "/models/?cat=adc&type={$value->type_id}&mark={$value->mark_id}&flag={$value->flags}";
-
-        $mark = new \StdClass;
-        $mark->original = $value;
-        $mark->original->url = $url;
-        $mark->name = $value->mark_name;
-        $mark->image = $value->mark_img_url;
-        $key = preg_split("/\(|\s/", strtolower($value->mark_name))[0];
-
-        $marks[$key] = $mark;
-    });
-    array_walk($marksAftermarket, function ($value) use (&$marks) {
-        $key = preg_split("/\(|\s/", strtolower($value->mfa_brand))[0];
-        if ( ! empty($key) && array_key_exists($key, $marks) ) {
-            $marks[$key]->aftermarket[] = $value;
-        } else {
-            $mark = new \StdClass;
-            $mark->name = $value->mfa_brand;
-            $mark->image = $value->img_path;
-            $mark->aftermarket[] = $value;
-            $marks[$key] = $mark;
-        }
-    });
-    usort($marks, function($a, $b) {
-        $al = strtolower($a->name);
-        $bl = strtolower($b->name);
-        if ($al == $bl) return 0;
-        return ($al > $bl) ? +1 : -1;
-    });
-
-    $items = new \StdClass();
-    $items->east = array_filter($marks, function($mark) use ($east) {
-        return in_array(strtolower($mark->name), $east);
-    });
-    $items->west = array_filter($marks, function($mark) use ($west) {
-        return in_array(strtolower($mark->name), $west);
-    });
-
-    $data = [
-        'marks' => $items
-    ];
-
+    $data = [ 'marks' => $items ];
     return $data;
 });
-add_filter('sage/template/models/data', __NAMESPACE__ . '\get_models');
+add_filter('sage/template/models/data', function($data) {
+
+    if ( ! wp_doing_ajax() ) :
+        $oid->catalog = isset($_GET['cat']) ? $_GET['cat'] : '';
+    else :
+        $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+    endif;
+
+    $items = tlc_transient( 'marks' )
+                ->expires_in( 1 )
+                ->updates_with( __NAMESPACE__ . '\get_marks' )
+                ->get();
+    if ( ! $items )
+        $items = get_marks();
+
+    __NAMESPACE__ . '\get_models';
+});
 /* function($data) {
     // Общее
     $oid = new \StdClass();
@@ -779,6 +692,119 @@ add_action('wp_ajax_nopriv_get_production', __NAMESPACE__ . '\get_production');
 // Subgroups
 add_action('wp_ajax_get_subgroups', __NAMESPACE__ . '\get_subgroups');
 add_action('wp_ajax_nopriv_get_subgroups', __NAMESPACE__ . '\get_subgroups');
+function get_marks() {
+    include( get_theme_root() . '/autos/vendor/autodealer/_lib.php' );
+    include( get_theme_root() . '/autos/vendor/autodealer/adc/api.php' );
+    include( get_theme_root() . '/autos/vendor/autodealer/td/api.php' );
+
+    $ADC = new \ADC();
+    $TD = new \TD();
+    $whitelist = ['acura', 'daihatsu', 'datsun', 'honda', 'isuzu', 'mazda', 'mitsubishi', 'subaru', 'suzuki', 'infiniti', 'nissan', 'lexus', 'scion', 'toyota', 'skoda', 'audi', 'volkswagen', 'bmw'];
+    $east = ['acura', 'daihatsu', 'datsun', 'honda', 'infiniti', 'isuzu', 'lexus', 'mazda', 'mitsubishi', 'nissan', 'scion', 'subaru', 'suzuki', 'toyota'];
+    $west = ['skoda', 'audi', 'bmw', 'volkswagen'];
+    /// Раскомментировав строку нижу, можно посмотреть что вернул сервер
+    // $ADC->e($oMarkList);
+
+    $marksOriginal = array_filter($ADC->getMarkList(9)->marks, function($mark) use ($whitelist) {
+        if ( !in_array(strtolower($mark->mark_name), $whitelist) ) return false;
+        return 1000 != $mark->mark_id;
+    });
+    $marksAftermarket = array_filter($TD->getTDMarks('pc')->marks, function($mark) use ($whitelist) {
+        if ( !in_array( explode(' ', strtolower($mark->mfa_brand))[0], $whitelist) ) return false;
+        return true;
+    });
+
+    $marks = array();
+    array_walk($marksOriginal, function ($value) use (&$marks) {
+        if ( $value->external ) {
+            $arr = explode('/',$value->route);
+            $mark = end( $arr );
+            $entry = "models";
+            $iface = NULL;
+            $var  = 'mark';   /// Передаваемая переменная
+            if ( in_array($mark,['bmw','mini','moto','rr']) ){
+                $iface  = 'bmw';    /// Директория со скриптами
+                $action = 'series'; /// Входная точка
+                $entry = $action;
+            }
+            if( in_array($mark,['nissan','infiniti']) ){
+                $iface  = 'nissan';     /// Директория со скриптами
+                $action = 'markets';    /// Входная точка
+                $var    = 'mark';       /// Передаваемая переменная
+            }
+            if( in_array($mark,['nissan','infiniti']) ){
+                $iface  = 'nissan';  /// Директория со скриптами
+                $action = 'markets'; /// Входная точка
+                $var = 'mark';
+            }
+            if( in_array($mark,['toyota','lexus']) ){
+                $iface  = 'toyota';  /// Директория со скриптами
+                $action = 'markets'; /// Входная точка
+            }
+            if( in_array($mark,['audi','volkswagen','seat','skoda']) ){
+                $iface  = 'etka';    /// Директория со скриптами
+                $action = 'markets'; /// Входная точка
+            }
+            if( in_array($mark,['pc','cv']) ){
+                $iface  = 'td'; /// Директория со скриптами
+                $action = 'marks';       /// Входная точка
+                $var    = 'type';        /// Передаваемая переменная
+            }
+            $mcct=[];
+            if(preg_match('/^(kia|hyundai)(_(c|s))?$/si',$mark,$mcct)) {
+                $mark		= $mcct[1];
+                $iface  = 'mcct';
+                $action = 'index';
+                $var    = 'type='.(!empty($mcct[2])?$mcct[3]:'').'&mark';
+            }
+            if( in_array($mark,['fiat', 'lancia', 'abarth', 'alfa-romeo']) ){
+                $iface = 'fiat';
+                $action = 'models';
+                $var = 'mark';
+            }
+            $entry =
+            $url = "/$entry/?cat=$iface&{$var}={$mark}";
+        }
+        else $url = "/models/?cat=adc&type={$value->type_id}&mark={$value->mark_id}&flag={$value->flags}";
+
+        $mark = new \StdClass;
+        $mark->original = $value;
+        $mark->original->url = $url;
+        $mark->name = $value->mark_name;
+        $mark->image = $value->mark_img_url;
+        $key = preg_split("/\(|\s/", strtolower($value->mark_name))[0];
+
+        $marks[$key] = $mark;
+    });
+    array_walk($marksAftermarket, function ($value) use (&$marks) {
+        $key = preg_split("/\(|\s/", strtolower($value->mfa_brand))[0];
+        if ( ! empty($key) && array_key_exists($key, $marks) ) {
+            $marks[$key]->aftermarket[] = $value;
+        } else {
+            $mark = new \StdClass;
+            $mark->name = $value->mfa_brand;
+            $mark->image = $value->img_path;
+            $mark->aftermarket[] = $value;
+            $marks[$key] = $mark;
+        }
+    });
+    usort($marks, function($a, $b) {
+        $al = strtolower($a->name);
+        $bl = strtolower($b->name);
+        if ($al == $bl) return 0;
+        return ($al > $bl) ? +1 : -1;
+    });
+
+    $items = new \StdClass();
+    $items->east = array_filter($marks, function($mark) use ($east) {
+        return in_array(strtolower($mark->name), $east);
+    });
+    $items->west = array_filter($marks, function($mark) use ($west) {
+        return in_array(strtolower($mark->name), $west);
+    });
+
+    return $items;
+}
 function get_models($data = '') {
     // Общее
     $oid = new \StdClass();

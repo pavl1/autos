@@ -86,6 +86,11 @@ let webpackConfig = {
         options: {
           name: `vendor/${config.cacheBusting}.[ext]`,
         },
+
+      },
+      {
+        test: /\.vue$/,
+        loader: 'vue'
       },
     ],
   },
@@ -96,6 +101,9 @@ let webpackConfig = {
       'bower_components',
     ],
     enforceExtension: false,
+    alias: {
+      'vue$': 'vue/dist/vue.esm.js'
+    },
   },
   resolveLoader: {
     moduleExtensions: ['-loader'],
