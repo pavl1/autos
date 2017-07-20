@@ -90,7 +90,12 @@ let webpackConfig = {
       },
       {
         test: /\.vue$/,
-        loader: 'vue'
+        loader: 'vue',
+        options: {
+            buble: {
+                objectAssign: 'Object.assign'
+            }
+        }
       },
     ],
   },
