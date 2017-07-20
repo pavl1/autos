@@ -48,6 +48,26 @@
 }
 @mixin collapse-link {}
 
+@keyframes move {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 28px 0;
+  }
+}
+
+.slide-fade-enter-active {
+  transition: all .3s ease;
+}
+.slide-fade-leave-active {
+  transition: all .3s ease;
+}
+.slide-fade-enter, .slide-fade-leave-to {
+  transform: translateX(10px);
+  opacity: 0;
+}
+
 .mark {
 
     &-list { // marks
@@ -102,7 +122,8 @@
         display: block;
         padding: 0.5rem 1rem;
         text-align: center;
-        transition: background-color 0.2s ease;
+        background: transparent;
+        transition: background 0.2s ease;
 
         &:before {
             content: '';
@@ -115,6 +136,12 @@
             background-color: $brand-gray;
         }
         &:hover { text-decoration: none }
+
+        .active & {
+            background-image: repeating-linear-gradient( $loading );
+            background-size: 28px 28px;
+            animation: move 0.75s linear infinite
+        }
 
         &-list {
             padding: 0;

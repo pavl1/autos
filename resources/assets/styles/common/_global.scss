@@ -4,6 +4,7 @@ body#application {
     min-height: 100vh;
     flex-direction: column;
     justify-content: space-between;
+    overflow-y: scroll;
 }
 .content {
     padding-top: 30px;

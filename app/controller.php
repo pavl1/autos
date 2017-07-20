@@ -791,19 +791,17 @@ function get_marks_aftermarket($whitelist) {
     return $items;
 }
 
-function get_series(){
+function get_series() {
     $oid = new \StdClass();
-    $car = new \StdClass();
-    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+    $oid->catalog = 'bmw';
     $oid->type = 'vt';
 
     include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
 
     $api = new \BMW();
     $response = $api->getBMWCatalogs($oid->mark);
-    $car->series = $response->vt;
 
-    wp_send_json_success($car);
+    wp_send_json_success($response->vt);
 }
 function get_models($data = '') {
     // Общее
