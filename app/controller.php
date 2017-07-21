@@ -13,17 +13,17 @@ add_filter('sage/template/frontpage/data', function($data) {
 
     $marksOriginal = tlc_transient( 'marks_original' )
                 ->expires_in( 30 )
-                ->updates_with( __NAMESPACE__ . '\get_marks_original', array( $whitelist ) )
+                ->updates_with( __NAMESPACE__ . '\api_get_marks_original', array( $whitelist ) )
                 ->get();
     if ( ! $marksOriginal )
-        $marksOriginal = get_marks_original($whitelist);
+        $marksOriginal = api_get_marks_original($whitelist);
 
     $marksAftermarket = tlc_transient( 'marks_aftermarket' )
                 ->expires_in( 30 )
-                ->updates_with( __NAMESPACE__ . '\get_marks_aftermarket', array( $whitelist ) )
+                ->updates_with( __NAMESPACE__ . '\api_get_marks_aftermarket', array( $whitelist ) )
                 ->get();
     if ( ! $marksAftermarket )
-        $marksAftermarket = get_marks_aftermarket($whitelist);
+        $marksAftermarket = api_get_marks_aftermarket($whitelist);
 
     $marks = array();
     array_walk($marksOriginal, function ($value) use (&$marks) {
@@ -119,22 +119,14 @@ add_filter('sage/template/frontpage/data', function($data) {
 
     return $data;
 });
+
 add_filter('sage/template/models/data', function($data) {
-
-    if ( ! wp_doing_ajax() ) :
-        $oid->catalog = isset($_GET['cat']) ? $_GET['cat'] : '';
-    else :
-        $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
-    endif;
-
-    $items = tlc_transient( 'marks' )
-                ->expires_in( 1 )
-                ->updates_with( __NAMESPACE__ . '\get_marks' )
-                ->get();
-    if ( ! $items )
-        $items = get_marks();
-
-    __NAMESPACE__ . '\get_models';
+    // $items = tlc_transient( 'marks' )
+    //             ->expires_in( 1 )
+    //             ->updates_with( __NAMESPACE__ . '\get_models' )
+    //             ->get();
+    // if ( ! $items )
+        $items = get_models();
 });
 /* function($data) {
     // Общее
@@ -768,7 +760,7 @@ add_action('wp_ajax_nopriv_get_production', __NAMESPACE__ . '\get_production');
 add_action('wp_ajax_get_subgroups', __NAMESPACE__ . '\get_subgroups');
 add_action('wp_ajax_nopriv_get_subgroups', __NAMESPACE__ . '\get_subgroups');
 
-function get_marks_original($whitelist) {
+function api_get_marks_original($whitelist) {
     include( get_theme_root() . '/autos/vendor/autodealer/adc/api.php' );
     $ADC = new \ADC();
 
@@ -779,7 +771,7 @@ function get_marks_original($whitelist) {
 
     return $items;
 }
-function get_marks_aftermarket($whitelist) {
+function api_get_marks_aftermarket($whitelist) {
     include( get_theme_root() . '/autos/vendor/autodealer/td/api.php' );
     $TD = new \TD();
 
@@ -790,18 +782,30 @@ function get_marks_aftermarket($whitelist) {
 
     return $items;
 }
+function api_get_series($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \BMW();
+
+    return $api->getBMWCatalogs($oid->mark);
+}
 
 function get_series() {
     $oid = new \StdClass();
     $oid->catalog = 'bmw';
     $oid->type = 'vt';
 
-    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $response = tlc_transient( 'series' )
+                ->expires_in( 30 )
+                ->updates_with( __NAMESPACE__ . '\api_get_series', array( $oid ) )
+                ->get();
+    if ( ! $response )
+        $response = api_get_series($oid);
 
-    $api = new \BMW();
-    $response = $api->getBMWCatalogs($oid->mark);
-
-    wp_send_json_success($response->vt);
+    $data = [
+        'series' => $response->vt,
+        'oid' => $oid
+    ];
+    wp_send_json_success($oid);
 }
 function get_models($data = '') {
     // Общее
@@ -813,9 +817,9 @@ function get_models($data = '') {
     else :
         $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
     endif;
+    echo '<pre>'; var_dump($oid); echo '</pre>';
 
     /** Обязательно к применению */
-    include( get_theme_root() . '/autos/vendor/autodealer/_lib.php' );
     include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
 
     switch ($oid->catalog) {

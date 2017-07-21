@@ -7,8 +7,8 @@
                 <span class="mark-name">{{ mark.name.toLowerCase() }}</span>
 
                 <ul class="mark-link-list">
-                    <mark-original :item="mark.original" :active.sync="active"></mark-original>
-                    <mark-aftermarket :item="item" :active.sync="active" v-for="item in mark.aftermarket"></mark-aftermarket>
+                    <mark-original :item="mark.original"></mark-original>
+                    <mark-aftermarket :item="item" v-for="item in mark.aftermarket"></mark-aftermarket>
                 </ul>
             </li>
         </ul>
@@ -19,11 +19,12 @@
                 <span class="mark-name">{{ mark.name.toLowerCase() }}</span>
 
                 <ul class="mark-link-list">
-                    <mark-original :item="mark.original" :active.sync="active"></mark-original>
-                    <mark-aftermarket :item="item" :active.sync="active" v-for="item in mark.aftermarket"></mark-aftermarket>
+                    <mark-original :item="mark.original"></mark-original>
+                    <mark-aftermarket :item="item" v-for="item in mark.aftermarket"></mark-aftermarket>
                 </ul>
             </li>
         </ul>
+        <router-link to="/bmw">Тест</router-link>
     </div>
 </template>
 
@@ -34,23 +35,9 @@ import markAftermarket from './components/mark-aftermarket.vue'
 export default {
     data() {
         return {
-            marks: window.marks,
-            active: ''
+            marks: window.marks
         }
     },
     components: { markOriginal, markAftermarket },
-    methods: {
-        setModel(id) {
-            console.log(id)
-            this.active = id
-        },
-        getOriginalCatalogLink: function(mark) {
-            if ( mark.route ) return '/' + mark.route
-            return '/adc/' + mark.mark_id.toLowerCase()
-        },
-        getAftermarketCatalogLink: function(mark) {
-            return '/td/' + mark.mfa_id.toLowerCase();
-        }
-    }
 }
 </script>

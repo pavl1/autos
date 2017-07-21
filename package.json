@@ -76,6 +76,7 @@
     "font-awesome": "^4.7.0",
     "jquery": "1.12.4 - 3",
     "vue": "^2.4.1",
+    "vue-loading-spinner": "^1.0.10",
     "vue-router": "^2.7.0",
     "vuex": "^2.3.1"
   }
