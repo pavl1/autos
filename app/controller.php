@@ -119,6 +119,28 @@ add_filter('sage/template/frontpage/data', function($data) {
 
     return $data;
 });
+function api_get_marks_original($whitelist) {
+    include( get_theme_root() . '/autos/vendor/autodealer/adc/api.php' );
+    $ADC = new \ADC();
+
+    $items = array_filter($ADC->getMarkList(9)->marks, function($mark) use ($whitelist) {
+        if ( !in_array(strtolower($mark->mark_name), $whitelist) ) return false;
+        return 1000 != $mark->mark_id;
+    });
+
+    return $items;
+}
+function api_get_marks_aftermarket($whitelist) {
+    include( get_theme_root() . '/autos/vendor/autodealer/td/api.php' );
+    $TD = new \TD();
+
+    $items = array_filter($TD->getTDMarks('pc')->marks, function($mark) use ($whitelist) {
+        if ( !in_array( explode(' ', strtolower($mark->mfa_brand))[0], $whitelist) ) return false;
+        return true;
+    });
+
+    return $items;
+}
 
 add_filter('sage/template/models/data', function($data) {
     // $items = tlc_transient( 'marks' )
@@ -745,68 +767,150 @@ add_filter('sage/template/illustration/data', function($data) {
 
 
 // Series
-add_action('wp_ajax_get_series', __NAMESPACE__ . '\get_series');
-add_action('wp_ajax_nopriv_get_series', __NAMESPACE__ . '\get_series');
+add_action('wp_ajax_get_bmw_series', __NAMESPACE__ . '\get_bmw_series');
+add_action('wp_ajax_nopriv_get_bmw_series', __NAMESPACE__ . '\get_bmw_series');
 // Models
-add_action('wp_ajax_get_models', __NAMESPACE__ . '\get_models');
-add_action('wp_ajax_nopriv_get_models', __NAMESPACE__ . '\get_models');
+add_action('wp_ajax_get_bmw_models', __NAMESPACE__ . '\get_bmw_models');
+add_action('wp_ajax_nopriv_get_bmw_models', __NAMESPACE__ . '\get_bmw_models');
 // Options
-add_action('wp_ajax_get_options', __NAMESPACE__ . '\get_options');
-add_action('wp_ajax_nopriv_get_options', __NAMESPACE__ . '\get_options');
+add_action('wp_ajax_get_bmw_options', __NAMESPACE__ . '\get_bmw_options');
+add_action('wp_ajax_nopriv_get_bmw_options', __NAMESPACE__ . '\get_bmw_options');
 // Production
-add_action('wp_ajax_get_production', __NAMESPACE__ . '\get_production');
-add_action('wp_ajax_nopriv_get_production', __NAMESPACE__ . '\get_production');
+add_action('wp_ajax_get_bmw_production', __NAMESPACE__ . '\get_bmw_production');
+add_action('wp_ajax_nopriv_get_bmw_production', __NAMESPACE__ . '\get_bmw_production');
 // Subgroups
 add_action('wp_ajax_get_subgroups', __NAMESPACE__ . '\get_subgroups');
 add_action('wp_ajax_nopriv_get_subgroups', __NAMESPACE__ . '\get_subgroups');
 
-function api_get_marks_original($whitelist) {
-    include( get_theme_root() . '/autos/vendor/autodealer/adc/api.php' );
-    $ADC = new \ADC();
-
-    $items = array_filter($ADC->getMarkList(9)->marks, function($mark) use ($whitelist) {
-        if ( !in_array(strtolower($mark->mark_name), $whitelist) ) return false;
-        return 1000 != $mark->mark_id;
-    });
-
-    return $items;
-}
-function api_get_marks_aftermarket($whitelist) {
-    include( get_theme_root() . '/autos/vendor/autodealer/td/api.php' );
-    $TD = new \TD();
-
-    $items = array_filter($TD->getTDMarks('pc')->marks, function($mark) use ($whitelist) {
-        if ( !in_array( explode(' ', strtolower($mark->mfa_brand))[0], $whitelist) ) return false;
-        return true;
-    });
-
-    return $items;
-}
-function api_get_series($oid) {
+function api_bmw_get_series($oid) {
     include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
     $api = new \BMW();
-
-    return $api->getBMWCatalogs($oid->mark);
+    $series = [];
+    foreach ($api->getBMWCatalogs($oid->mark)->vt as $value) {
+        $item = new \StdClass();
+        $item->id = $value->Baureihe;
+        $item->name = $value->ExtBaureihe;
+        $series[] = $item;
+    }
+    return $series;
+}
+function api_bmw_get_models($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \BMW();
+    $response = new \StdClass();
+    $models = [];
+    $api_response = $api->getBMWModels($oid->type, $oid->series)->aModels;
+    foreach ($api_response[0]->models as $value) {
+        $models[] = $value;
+    }
+    $response = $api_response[0];
+    $response->models = $models;
+    return $response;
+}
+function api_bmw_get_options($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \BMW();
+    return $api->getBMWOptions($oid->type, $oid->series, $oid->body, $oid->model, $oid->market)->aData;
+}
+function api_bmw_get_production($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \BMW();
+    $response = $api->getBMWProduction($oid->type, $oid->series, $oid->body, $oid->model, $oid->market, $oid->rule, $oid->transmission)->aData;
+    $response = current($response);
+    $response = [
+        "DateStart"  => $response->DateStart,
+        "DateEnd"    => $response->DateEnd,
+        "startYear"  => substr($response->DateStart,0,4),
+        "startMonth" => substr($response->DateStart,4,2),
+        "startDay"   => substr($response->DateStart,6,2),
+        "endYear"    => substr($response->DateEnd,0,4),
+        "endMonth"   => substr($response->DateEnd,4,2),
+        "endDay"     => substr($response->DateEnd,6,2),
+    ];
+    return $response;
 }
 
-function get_series() {
+function get_bmw_series() {
     $oid = new \StdClass();
     $oid->catalog = 'bmw';
+    $oid->mark = 'bmw';
     $oid->type = 'vt';
 
-    $response = tlc_transient( 'series' )
-                ->expires_in( 30 )
-                ->updates_with( __NAMESPACE__ . '\api_get_series', array( $oid ) )
-                ->get();
-    if ( ! $response )
-        $response = api_get_series($oid);
-
+    $series = tlc_transient( "{$oid->catalog}-series" )
+            ->expires_in( 30 )
+            ->updates_with( __NAMESPACE__ . '\api_bmw_get_series', array( $oid ) )
+            ->get();
+    if ( ! $series ) $series = api_bmw_get_series($oid);
     $data = [
-        'series' => $response->vt,
+        'series' => $series,
         'oid' => $oid
     ];
-    wp_send_json_success($oid);
+    wp_send_json_success($data);
 }
+function get_bmw_models() {
+    $oid = new \StdClass();
+    $oid->catalog = 'bmw';
+    $oid->mark = 'bmw';
+    $oid->type = 'vt';
+    $oid->series = isset($_POST['series']) ? $_POST['series'] : '';
+
+    $markets = tlc_transient( "{$oid->catalog}-{$oid->series}" )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_bmw_get_models', array( $oid ) )
+            ->get();
+    if ( ! $markets ) $markets = api_bmw_get_models($oid);
+
+    $data = [
+        'markets' => $markets,
+        'oid' => $oid
+    ];
+    wp_send_json_success($data);
+}
+function get_bmw_options() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+    $oid->catalog = 'bmw';
+    $oid->mark = 'bmw';
+    $oid->type = 'vt';
+
+    $key = "{$oid->catalog}-{$oid->series}-{$oid->body}-{$oid->model}-{$oid->market}";
+    $items = tlc_transient( $key )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_bmw_get_options', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_bmw_get_options($oid);
+
+    $data = [
+        'oid' => $oid,
+        'options' => $items
+    ];
+
+    wp_send_json_success( $data );
+}
+function get_bmw_production() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+    $oid->catalog = 'bmw';
+    $oid->mark = 'bmw';
+    $oid->type = 'vt';
+
+    $key = "{$oid->catalog}-{$oid->series}-{$oid->body}-{$oid->model}-{$oid->market}-{$oid->rule}-{$oid->transmission}";
+    $items = tlc_transient( $key )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_bmw_get_production', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_bmw_get_production($oid);
+
+    $data = [
+        'oid' => $oid,
+        'production' => $items
+    ];
+
+    wp_send_json_success( $data );
+}
+
+
+
 function get_models($data = '') {
     // Общее
     $oid = new \StdClass();

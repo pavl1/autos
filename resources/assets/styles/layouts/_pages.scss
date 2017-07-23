@@ -1,34 +1,10 @@
 @mixin link() {
-    display: flex;
-    flex-flow: row nowrap;
-    background-color: $white;
-    transition: background-color 0.3s ease;
 }
 @mixin link-expanded() { background-color: rgb(123, 160, 211) }
 @mixin link-text() {
     border-width: 1px;
     border-color: rgb(196, 196, 196);
     border-style: solid;
-}
-@mixin search() {
-    width: 100%;
-    margin: 1rem 0;
-    padding: 0.5rem 1rem;
-    background-color: transparent;
-    border: 1px solid $brand-black;
-    color: $brand-black;
-    text-align: center;
-
-    &:focus {
-        outline: none;
-        &::placeholder { color: transparent }
-    }
-
-    &::placeholder {
-        color: $brand-black;
-        text-align: center;
-        transition: color 0.3s ease;
-    }
 }
 @mixin collapse-block() {
     border-width: 1px;
@@ -63,9 +39,13 @@
 .slide-fade-leave-active {
   transition: all .3s ease;
 }
-.slide-fade-enter, .slide-fade-leave-to {
+.slide-fade-enter {
   transform: translateX(10px);
   opacity: 0;
+}
+.slide-fade-leave-to {
+    transform: translateX(-10px);
+    opacity: 0;
 }
 
 .mark {
@@ -163,17 +143,23 @@
 
 }
 .series {
-    &-link {
-        @include link;
-        &[aria-expanded='true'] { @include link-expanded }
-        span { @include link-text }
+    &-header{
+        th {
+            border: 0;
+        };
     }
+    &-link {
+        background-color: $white;
+        cursor: pointer;
+        &:hover {
+            background-color: rgb(123, 160, 211) !important;
+            color: $white;
+        }
+        td {
+            border: 1px solid rgb(196, 196, 196);
+            padding: 0.25rem 1rem;
+        }
 
-    &-search { @include search }
-
-    &-header {
-        display: flex;
-        flex-flow: row nowrap;
     }
 
     .model {
@@ -183,12 +169,7 @@
         &-list { @include collapse-list }
         &-item { @include collapse-item }
     }
-    .option {
-        &-list {
-            list-style: none;
-            padding: 0;
-        }
-    }
+
     .production {
         &-table {
             width: 100%;
@@ -216,13 +197,18 @@
         }
     }
 }
+.options {
+    &-list {
+        list-style: none;
+        padding: 0;
+    }
+}
 .groups {
     &-link {
         @include link;
         @include link-text;
         &[aria-expanded='true'] { @include link-expanded }
     }
-    &-search { @include search }
 
     .subgroups {
         @include collapse-block;

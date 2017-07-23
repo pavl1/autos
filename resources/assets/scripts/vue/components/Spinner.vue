@@ -9,7 +9,7 @@ export default {
       default: '40px'
     },
     background: {
-      default: '#41b883'
+      default: '#075898'
     }
   },
   computed: {
@@ -26,6 +26,8 @@ export default {
 <style lang="scss" scoped>
   .spinner {
     position: relative;
+    margin-left: auto;
+    margin-right: auto;
     * {
         line-height: 0;
         box-sizing: border-box;
@@ -47,7 +49,7 @@ export default {
       content: '';
       width: 100%;
       height: 100%;
-      background: #41b883;
+      background: #075898;
       animation: rotate-square-2-animate .5s linear infinite;
       position: absolute;
       bottom:40%;

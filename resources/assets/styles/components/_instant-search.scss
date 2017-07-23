@@ -1,0 +1,20 @@
+.instant-search {
+    width: 100%;
+    margin: 1rem 0;
+    padding: 0.5rem 1rem;
+    background-color: transparent;
+    border: 1px solid $brand-black;
+    color: $brand-black;
+    text-align: center;
+
+    &:focus {
+        outline: none;
+        &::placeholder { color: transparent }
+    }
+
+    &::placeholder {
+        color: $brand-black;
+        text-align: center;
+        transition: color 0.3s ease;
+    }
+}
