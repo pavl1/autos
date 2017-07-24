@@ -765,24 +765,27 @@ add_filter('sage/template/illustration/data', function($data) {
     return $data;
 });
 
-
+//// BMW
 // Series
-add_action('wp_ajax_get_bmw_series', __NAMESPACE__ . '\get_bmw_series');
-add_action('wp_ajax_nopriv_get_bmw_series', __NAMESPACE__ . '\get_bmw_series');
+add_action('wp_ajax_bmw_series', __NAMESPACE__ . '\bmw_series');
+add_action('wp_ajax_nopriv_bmw_series', __NAMESPACE__ . '\bmw_series');
 // Models
-add_action('wp_ajax_get_bmw_models', __NAMESPACE__ . '\get_bmw_models');
-add_action('wp_ajax_nopriv_get_bmw_models', __NAMESPACE__ . '\get_bmw_models');
+add_action('wp_ajax_bmw_models', __NAMESPACE__ . '\bmw_models');
+add_action('wp_ajax_nopriv_bmw_models', __NAMESPACE__ . '\bmw_models');
 // Options
-add_action('wp_ajax_get_bmw_options', __NAMESPACE__ . '\get_bmw_options');
-add_action('wp_ajax_nopriv_get_bmw_options', __NAMESPACE__ . '\get_bmw_options');
+add_action('wp_ajax_bmw_options', __NAMESPACE__ . '\bmw_options');
+add_action('wp_ajax_nopriv_bmw_options', __NAMESPACE__ . '\bmw_options');
 // Production
-add_action('wp_ajax_get_bmw_production', __NAMESPACE__ . '\get_bmw_production');
-add_action('wp_ajax_nopriv_get_bmw_production', __NAMESPACE__ . '\get_bmw_production');
+add_action('wp_ajax_bmw_production', __NAMESPACE__ . '\bmw_production');
+add_action('wp_ajax_nopriv_bmw_production', __NAMESPACE__ . '\bmw_production');
+// Groups
+add_action('wp_ajax_bmw_groups', __NAMESPACE__ . '\bmw_groups');
+add_action('wp_ajax_nopriv_bmw_groups', __NAMESPACE__ . '\bmw_groups');
 // Subgroups
-add_action('wp_ajax_get_subgroups', __NAMESPACE__ . '\get_subgroups');
-add_action('wp_ajax_nopriv_get_subgroups', __NAMESPACE__ . '\get_subgroups');
+add_action('wp_ajax_bmw_subgroups', __NAMESPACE__ . '\bmw_subgroups');
+add_action('wp_ajax_nopriv_bmw_subgroups', __NAMESPACE__ . '\bmw_subgroups');
 
-function api_bmw_get_series($oid) {
+function api_bmw_series($oid) {
     include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
     $api = new \BMW();
     $series = [];
@@ -794,7 +797,7 @@ function api_bmw_get_series($oid) {
     }
     return $series;
 }
-function api_bmw_get_models($oid) {
+function api_bmw_models($oid) {
     include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
     $api = new \BMW();
     $response = new \StdClass();
@@ -807,12 +810,12 @@ function api_bmw_get_models($oid) {
     $response->models = $models;
     return $response;
 }
-function api_bmw_get_options($oid) {
+function api_bmw_options($oid) {
     include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
     $api = new \BMW();
     return $api->getBMWOptions($oid->type, $oid->series, $oid->body, $oid->model, $oid->market)->aData;
 }
-function api_bmw_get_production($oid) {
+function api_bmw_production($oid) {
     include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
     $api = new \BMW();
     $response = $api->getBMWProduction($oid->type, $oid->series, $oid->body, $oid->model, $oid->market, $oid->rule, $oid->transmission)->aData;
@@ -829,8 +832,18 @@ function api_bmw_get_production($oid) {
     ];
     return $response;
 }
+function api_bmw_groups($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \BMW();
+    return $api->getBMWGroups($oid->type, $oid->series, $oid->body, $oid->model, $oid->market, $oid->rule, $oid->transmission, $oid->production, $oid->lang)->aData;
+}
+function api_bmw_subgroups($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \BMW();
+    return $api->getBMWSubGroups($oid->type, $oid->series, $oid->body, $oid->model, $oid->market, $oid->rule, $oid->transmission, $oid->production, $oid->group)->aData;
+}
 
-function get_bmw_series() {
+function bmw_series() {
     $oid = new \StdClass();
     $oid->catalog = 'bmw';
     $oid->mark = 'bmw';
@@ -838,16 +851,16 @@ function get_bmw_series() {
 
     $series = tlc_transient( "{$oid->catalog}-series" )
             ->expires_in( 30 )
-            ->updates_with( __NAMESPACE__ . '\api_bmw_get_series', array( $oid ) )
+            ->updates_with( __NAMESPACE__ . '\api_bmw_series', array( $oid ) )
             ->get();
-    if ( ! $series ) $series = api_bmw_get_series($oid);
+    if ( ! $series ) $series = api_bmw_series($oid);
     $data = [
         'series' => $series,
         'oid' => $oid
     ];
     wp_send_json_success($data);
 }
-function get_bmw_models() {
+function bmw_models() {
     $oid = new \StdClass();
     $oid->catalog = 'bmw';
     $oid->mark = 'bmw';
@@ -856,9 +869,9 @@ function get_bmw_models() {
 
     $markets = tlc_transient( "{$oid->catalog}-{$oid->series}" )
             ->expires_in( 0 )
-            ->updates_with( __NAMESPACE__ . '\api_bmw_get_models', array( $oid ) )
+            ->updates_with( __NAMESPACE__ . '\api_bmw_models', array( $oid ) )
             ->get();
-    if ( ! $markets ) $markets = api_bmw_get_models($oid);
+    if ( ! $markets ) $markets = api_bmw_models($oid);
 
     $data = [
         'markets' => $markets,
@@ -866,7 +879,7 @@ function get_bmw_models() {
     ];
     wp_send_json_success($data);
 }
-function get_bmw_options() {
+function bmw_options() {
     $oid = new \StdClass();
     $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
     $oid->catalog = 'bmw';
@@ -876,9 +889,9 @@ function get_bmw_options() {
     $key = "{$oid->catalog}-{$oid->series}-{$oid->body}-{$oid->model}-{$oid->market}";
     $items = tlc_transient( $key )
             ->expires_in( 0 )
-            ->updates_with( __NAMESPACE__ . '\api_bmw_get_options', array( $oid ) )
+            ->updates_with( __NAMESPACE__ . '\api_bmw_options', array( $oid ) )
             ->get();
-    if ( ! $items ) $items = api_bmw_get_options($oid);
+    if ( ! $items ) $items = api_bmw_options($oid);
 
     $data = [
         'oid' => $oid,
@@ -887,7 +900,7 @@ function get_bmw_options() {
 
     wp_send_json_success( $data );
 }
-function get_bmw_production() {
+function bmw_production() {
     $oid = new \StdClass();
     $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
     $oid->catalog = 'bmw';
@@ -897,13 +910,56 @@ function get_bmw_production() {
     $key = "{$oid->catalog}-{$oid->series}-{$oid->body}-{$oid->model}-{$oid->market}-{$oid->rule}-{$oid->transmission}";
     $items = tlc_transient( $key )
             ->expires_in( 0 )
-            ->updates_with( __NAMESPACE__ . '\api_bmw_get_production', array( $oid ) )
+            ->updates_with( __NAMESPACE__ . '\api_bmw_production', array( $oid ) )
             ->get();
-    if ( ! $items ) $items = api_bmw_get_production($oid);
+    if ( ! $items ) $items = api_bmw_production($oid);
 
     $data = [
         'oid' => $oid,
         'production' => $items
+    ];
+
+    wp_send_json_success( $data );
+}
+function bmw_groups() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+    $oid->catalog = 'bmw';
+    $oid->mark = 'bmw';
+    $oid->type = 'vt';
+    $oid->lang = 'ru';
+
+    $key = "{$oid->catalog}-{$oid->series}-{$oid->body}-{$oid->model}-{$oid->market}-{$oid->rule}-{$oid->transmission}-{$oid->production}";
+    $items = tlc_transient( $key )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_bmw_groups', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_bmw_groups($oid);
+
+    $data = [
+        'oid' => $oid,
+        'groups' => $items
+    ];
+
+    wp_send_json_success( $data );
+}
+function bmw_subgroups() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+    $oid->catalog = 'bmw';
+    $oid->mark = 'bmw';
+    $oid->type = 'vt';
+
+    $key = "{$oid->catalog}-{$oid->series}-{$oid->body}-{$oid->model}-{$oid->market}-{$oid->rule}-{$oid->transmission}-{$oid->production}-{$oid->group}";
+    $items = tlc_transient( $key )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_bmw_subgroups', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_bmw_subgroups($oid);
+
+    $data = [
+        'oid' => $oid,
+        'subgroups' => $items
     ];
 
     wp_send_json_success( $data );

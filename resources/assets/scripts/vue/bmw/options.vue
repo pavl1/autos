@@ -3,14 +3,16 @@
 
         <input class="instant-search" type="text" name="" v-model="search" placeholder="Выберите / введите опцию">
 
-        <spinner v-if="isLoading"></spinner>
-        <ul class="options-list" v-else>
-            <li class="options-item" v-for="option in filtered">
-                <router-link class="options-link" :to="'/bmw/' + [ series, body, model, market, option.RuleCode, option.GetriebeCode ].join('/')">
-                    {{ option.RuleName }} / {{ option.GetriebeName }}
-                </router-link>
-            </li>
-        </ul>
+        <transition name="slide-fade" mode="out-in">
+            <spinner v-if="isLoading"></spinner>
+            <ul class="options-list" v-else>
+                <li class="options-item" v-for="option in filtered">
+                    <router-link class="options-link" :to="'/bmw/' + [ series, body, model, market, option.RuleCode, option.GetriebeCode ].join('/')">
+                        {{ option.RuleName }} / {{ option.GetriebeName }}
+                    </router-link>
+                </li>
+            </ul>
+        </transition>
     </div>
 </template>
 
@@ -36,7 +38,7 @@ export default {
     created() { this.fetchData() },
     methods: {
         fetchData() {
-            window.wp.ajax.send('get_bmw_options', { data: { oid: this.oid } }).then( response => {
+            window.wp.ajax.send('bmw_options', { data: { oid: this.oid } }).then( response => {
                 this.options = response.options
                 this.isLoading = false
             })

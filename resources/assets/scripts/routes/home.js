@@ -7,6 +7,8 @@ import BMWSeries from '../vue/bmw/series.vue'
 import BMWModels from '../vue/bmw/models.vue'
 import BMWOptions from '../vue/bmw/options.vue'
 import BMWProduction from '../vue/bmw/production.vue'
+import BMWGroups from '../vue/bmw/groups.vue'
+import BMWSubgroups from '../vue/bmw/subgroups.vue'
 
 Vue.use(VueRouter)
 Vue.use(Vuex)
@@ -14,6 +16,8 @@ const router = new VueRouter({
     routes: [
         // { path: '/adc/:cat', component: Models },
         // { path: '/td/:cat', component: Models },
+        { path: '/bmw/:series/:body/:model/:market/:rule/:transmission/:production/:group', component: BMWSubgroups, props: true },
+        { path: '/bmw/:series/:body/:model/:market/:rule/:transmission/:production', component: BMWGroups, props: true },
         { path: '/bmw/:series/:body/:model/:market/:rule/:transmission', component: BMWProduction, props: true },
         { path: '/bmw/:series/:body/:model/:market', component: BMWOptions, props: true },
         { path: '/bmw/:series', component: BMWModels, props: true },
