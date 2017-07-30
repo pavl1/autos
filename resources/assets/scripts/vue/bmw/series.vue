@@ -14,7 +14,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <router-link tag="tr" class="series-link" :to="'/bmw/' + item.id" v-for="item in filteredSeries">
+                    <router-link tag="tr" class="series-link" :to="'/bmw/' + [ mark, item.id].join('/')" v-for="item in filteredSeries">
                         <td>{{ item.name.split(' ', 1)[0] }}</td>
                         <td>{{ item.id }}</td>
                     </router-link>
@@ -32,14 +32,20 @@ export default {
         return {
             isLoading: true,
             series: {},
-            search: ''
+            search: '',
+            oid: {
+                catalog: 'bmw',
+                type: 'vt',
+                mark: this.mark
+            }
         }
     },
+    props: [ 'mark' ],
     components: { Spinner },
     created() { this.fetchData() },
     methods: {
         fetchData() {
-            window.wp.ajax.send('bmw_series', { data: {} }).then( response => {
+            window.wp.ajax.send('bmw_series', { data: { oid: this.oid } }).then( response => {
                 this.series = response.series
                 this.isLoading = false
 

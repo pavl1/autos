@@ -5,19 +5,19 @@
         <transition name="slide-fade" mode="out-in">
             <spinner v-if="isLoading"></spinner>
             <div v-else>
-                <table class="table table-sm table-hover" v-for="market in markets.models" v-if="filteredModels(market).length">
+                <table v-for="leaf in tree" class="table table-sm table-hover" v-if="filteredTree(leaf).length">
                     <thead>
-                        <tr class="series-header">
-                            <th>{{ market.MarketName }}</th>
+                        <tr>
+                            <th>{{ leaf.str_des }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         <router-link
                         tag="tr"
                         class="series-link"
-                        :to="'/bmw/' + [ mark, series, markets.code, item.ModelID, market.MarketCode ].join('/')"
-                        v-for="item in filteredModels(market)">
-                            <td>{{ item.ModelCode }}</td>
+                        :to="'/td/' + [ mark, model, equipment, item.str_id ].join('/')"
+                        v-for="item in filteredTree(leaf)">
+                            <td>{{ item.str_des }}</td>
                         </router-link>
                     </tbody>
                 </table>
@@ -33,29 +33,29 @@ export default {
     data() {
         return {
             isLoading: true,
-            markets: {},
+            tree: {},
             search: '',
             oid: {
-                catalog: 'bmw',
-                type: 'vt',
+                catalog: 'td',
                 mark: this.mark,
-                series: this.series
+                model: this.model,
+                equipment: this.equipment
             }
         }
     },
-    props: [ 'mark', 'series'],
+    props: [ 'mark', 'model', 'equipment' ],
     components: { Spinner },
     created() { this.fetchData() },
     methods: {
         fetchData() {
-            window.wp.ajax.send('bmw_models', { data: { oid: this.oid } }).then( response => {
-                this.markets = response.markets
+            window.wp.ajax.send('td_tree', { data: { oid: this.oid } }).then( response => {
+                this.tree = response.items
                 this.isLoading = false
             })
         },
-        filteredModels(market) {
-            return market.ModelInfo.filter( model => {
-                return model.ModelCode.toLowerCase().indexOf(this.search) > - 1
+        filteredTree(leaf) {
+            return leaf.childrens.filter( item => {
+                return item.str_des.toLowerCase().indexOf(this.search.toLowerCase()) > -1
             } )
         }
     }

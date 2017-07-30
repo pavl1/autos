@@ -24,7 +24,6 @@
                 </ul>
             </li>
         </ul>
-        <router-link to="/bmw">Тест</router-link>
     </div>
 </template>
 

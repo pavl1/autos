@@ -7,7 +7,7 @@
             <spinner v-if="isLoading"></spinner>
             <ul class="options-list" v-else>
                 <li class="options-item" v-for="option in filtered">
-                    <router-link class="options-link" :to="'/bmw/' + [ series, body, model, market, option.RuleCode, option.GetriebeCode ].join('/')">
+                    <router-link class="options-link" :to="'/bmw/' + [ mark, series, body, model, market, option.RuleCode, option.GetriebeCode ].join('/')">
                         {{ option.RuleName }} / {{ option.GetriebeName }}
                     </router-link>
                 </li>
@@ -26,6 +26,9 @@ export default {
             options: {},
             search: '',
             oid: {
+                catalog: 'bmw',
+                type: 'vt',
+                mark: this.mark,
                 series: this.series,
                 body: this.body,
                 model: this.model,
@@ -33,7 +36,7 @@ export default {
             }
         }
     },
-    props: ['series', 'body', 'model', 'market' ],
+    props: [ 'mark', 'series', 'body', 'model', 'market' ],
     components: { Spinner },
     created() { this.fetchData() },
     methods: {

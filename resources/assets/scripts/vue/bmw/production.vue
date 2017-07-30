@@ -10,7 +10,7 @@
                     <td>{{ y }}</td>
                     <td class="production-item" v-for="m in 12">
                         <span v-if="(y == startYear && m < startMonth) || (y == endYear && m > endYear)">&emsp;</span>
-                        <router-link v-else :to="'/bmw/' + [ series, body, model, market, rule, transmission, '' + y + m + d(y, m) ].join('/')">{{ month(m) }}</router-link>
+                        <router-link v-else :to="'/bmw/' + [ mark, series, body, model, market, rule, transmission, '' + y + m + d(y, m) ].join('/')">{{ month(m) }}</router-link>
                     </td>
                 </tr>
             </table>
@@ -28,6 +28,9 @@ export default {
             production: {},
             search: '',
             oid: {
+                catalog: 'bmw',
+                type: 'vt',
+                mark: this.mark,
                 series: this.series,
                 body: this.body,
                 model: this.model,
@@ -37,7 +40,7 @@ export default {
             }
         }
     },
-    props: ['series', 'body', 'model', 'market', 'rule', 'transmission' ],
+    props: [ 'mark', 'series', 'body', 'model', 'market', 'rule', 'transmission' ],
     components: { Spinner },
     created() { this.fetchData() },
     methods: {

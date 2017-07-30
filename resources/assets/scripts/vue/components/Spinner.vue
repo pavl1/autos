@@ -26,6 +26,7 @@ export default {
 <style lang="scss" scoped>
   .spinner {
     position: relative;
+    margin-top: 2rem;
     margin-left: auto;
     margin-right: auto;
     * {

@@ -12,8 +12,9 @@ export default {
     props: [ 'item' ],
     methods: {
         getOriginalCatalogLink: function(mark) {
-            if ( mark.route ) return '/' + mark.route
-            return '/adc/' + mark.mark_id.toLowerCase()
+            if ( mark.catalog == 'adc' ) return '/adc/' + mark.mark_id.toLowerCase()
+            return '/' + [ mark.catalog, mark.route].join('/')
+
         },
     }
 }

@@ -7,8 +7,9 @@
             <spinner v-if="isLoading"></spinner>
             <ul v-else class="subgroups-list">
                 <li class="subgroups-item" v-for="subgroup in filtered">
-                    <a :href="url + '&graphic=' + subgroup.code">
-                        {{ subgroup.name }}
+                    <a :href="url + '&subgroup=' + subgroup.hg_ug + '&graphic=' + subgroup.bildtafel2">
+                        {{ subgroup.tsben_text }}
+                        {{ subgroup.tsmoa_text }}
                     </a>
                 </li>
             </ul>
@@ -23,31 +24,29 @@ export default {
     data() {
         return {
             isLoading: true,
-            groups: {},
+            subgroups: {},
             url: '',
             search: '',
             oid: {
-                catalog: 'bmw',
-                type: 'vt',
+                catalog: 'etka',
                 mark: this.mark,
-                series: this.series,
-                body: this.body,
-                model: this.model,
                 market: this.market,
-                rule: this.rule,
-                transmission: this.transmission,
+                model: this.model,
                 production: this.production,
+                code: this.code,
+                dir: this.dir,
+                type: this.type,
                 group: this.group
             }
         }
     },
-    props: [ 'mark', 'series', 'body', 'model', 'market', 'rule', 'transmission', 'production', 'group' ],
+    props: [ 'mark', 'market', 'model', 'production', 'code', 'dir', 'type', 'group' ],
     components: { Spinner },
     created() { this.fetchData() },
     methods: {
         fetchData() {
-            window.wp.ajax.send('bmw_subgroups', { data: { oid: this.oid } }).then( response => {
-                this.subgroups = response.subgroups
+            window.wp.ajax.send('etka_subgroups', { data: { oid: this.oid } }).then( response => {
+                this.subgroups = response.items
                 this.url = response.url
                 this.isLoading = false
             })
@@ -56,7 +55,7 @@ export default {
     computed: {
         filtered() {
             return this.subgroups.filter( (item) => {
-                return item.name.toLowerCase().indexOf(this.search) > -1
+                return item.tsben_text.toLowerCase().indexOf(this.search) > -1
             } )
         }
     }

@@ -88,6 +88,7 @@ add_filter('sage/template/frontpage/data', function($data) {
 
         $marks[$key] = $mark;
     });
+
     array_walk($marksAftermarket, function ($value) use (&$marks) {
         $key = preg_split("/\(|\s/", strtolower($value->mfa_brand))[0];
         if ( ! empty($key) && array_key_exists($key, $marks) ) {
@@ -141,16 +142,119 @@ function api_get_marks_aftermarket($whitelist) {
 
     return $items;
 }
+add_filter('sage/template/illustration/data', function($data) {
+    $oid = new \StdClass();
+    $car = new \StdClass();
+    $oid->catalog = isset($_GET['cat']) ? $_GET['cat'] : '';
+    $oid->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
+    $oid->model = isset($_GET['model']) ? $_GET['model'] : '';
+    $oid->market = isset($_GET['market']) ? $_GET['market'] : '';
+    $oid->production = isset($_GET['production']) ? $_GET['production'] : '';
+    $oid->group = isset($_GET['group']) ? $_GET['group'] : '';
+    $oid->subgroup = isset($_GET['subgroup']) ? $_GET['subgroup'] : '';
 
-add_filter('sage/template/models/data', function($data) {
-    // $items = tlc_transient( 'marks' )
-    //             ->expires_in( 1 )
-    //             ->updates_with( __NAMESPACE__ . '\get_models' )
-    //             ->get();
-    // if ( ! $items )
-        $items = get_models();
+    // Обязательно к применению
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+
+    switch ($oid->catalog) {
+        case 'fiat':
+            $api = new \Fiat();
+            $oid->table = isset($_GET['table']) ? urldecode(base64_decode($_GET['table'])) : '';
+            $response = $api->getFIATPartDrawData($oid->production, $oid->group, $oid->subgroup, $oid->table);
+            $variant = $response->partDrawData->variants[0]->variante;
+            $car->parts = $response;
+            $response = $api->getFIATDraw($oid->mark, $oid->model, $oid->production, $oid->group, $oid->subgroup, $oid->table, $variant, 0.5);
+            $car->illustration = $response;
+            break;
+        case 'etka':
+            $api = new \ETKA();
+            $oid->production_year = isset($_GET['production']) ? $_GET['production'] : '';
+            $oid->dir = isset($_GET['dir']) ? $_GET['dir'] : 'R';
+            $oid->code = isset($_GET['code']) ? $_GET['code'] : '';
+            $oid->graphic = isset($_GET['graphic']) ? $_GET['graphic'] : '';
+            $response = $api->getETKAIllustration($oid->mark, $oid->market, $oid->model, $oid->production_year, $oid->code, $oid->dir, $oid->group, $oid->subgroup, $oid->graphic, 0.5);
+            $car->illustration = $response;
+            $car->url = "/illustration/?cat={ $oid->catalog }&mark={ $oid->mark }&market={ $oid->market }&model={ $oid->model }&production_year={ $oid->production_year }&code={ $oid->code }";
+            break;
+        case 'bmw':
+            $api = new \BMW();
+            $oid->mark   = $api->rcv('mark');
+            $oid->type   = $api->rcv('type');
+            $oid->series = $api->rcv('series');
+            $oid->body   = $api->rcv('body');
+            $oid->model  = $api->rcv('model');
+            $oid->market = $api->rcv('market');
+            $oid->rule   = $api->rcv('rule');
+            $oid->trans  = $api->rcv('transmission');
+            $oid->prod   = $api->rcv('production');
+            $oid->group  = $api->rcv('group');
+            $oid->graphic= $api->rcv('graphic');
+
+            $response = $api->getBMWDetailsMap($oid->type,$oid->series,$oid->body,$oid->model,$oid->market,$oid->rule,$oid->trans,$oid->prod,$oid->group,$oid->graphic, "ru");
+            $car->aLabels   = $response->labels;
+            $car->aDetails  = $response->details;
+            $car->aComments = $response->comments;
+            $car->imgInfo = $response->imgInfo;
+            $car->url = "/illustration/?cat=bmw&mark={$oid->mark}&type={$oid->type}&series={$oid->series}&body={$oid->body}&model={$oid->model}&market={$oid->market}&rule={$oid->rule}&transmission={$oid->trans}&production={$oid->prod}&group={$oid->group}";
+            break;
+        case 'nissan':
+            $api = new \NIS();
+            $oid->modification = isset($_GET['modification']) ? $_GET['modification'] : '';
+            $oid->figure = $api->rcv('figure');
+            $oid->subimage = '';
+            $oid->sec = '';
+            $response = $api->getNISPic($oid->market, $oid->model, $oid->modification, $oid->group, $oid->figure, $oid->subimage, $oid->sec);
+
+            $car->illustration = $response;
+            $car->nextUrl = "/detail/?cat=nissan&market={$oid->market}&model={$oid->model}&modif={$oid->modification}&group={$oid->group}&figure={$oid->figure}&subfig=";
+            $car->nextSecUrl = "/illustration/?cat=nissan&market={$oid->market}&model={$oid->model}&modif={$oid->modification}&group={$oid->group}&figure={$oid->figure}&subfig=";
+            $car->secUrl = "/illustration/?cat=nissan&market={$oid->market}&model={$oid->model}&modif={$oid->modification}&group={$oid->group}&figure=";
+
+            break;
+        case 'toyota':
+            $api = new \TOY();
+            $oid->compl = isset($_GET['compl']) ? $_GET['compl'] : '';
+            $oid->option = isset($_GET['option']) ? $_GET['option'] : '';
+            $oid->code = isset($_GET['code']) ? $_GET['code'] : '';
+            $oid->group = isset($_GET['group']) ? $_GET['group'] : '';
+            $oid->graphic = isset($_GET['graphic']) ? $_GET['graphic'] : '';
+            // дополнительные данные
+            $oid->vin = isset($_GET['vin']) ? $_GET['vin'] : '';
+            $oid->vdate = isset($_GET['vdate']) ? $_GET['vdate'] : '';
+            $oid->siyopt = isset($_GET['siyopt']) ? $_GET['siyopt'] : '';
+
+            $car->getString = ""
+                . ( ( $oid->vin )    ? "&vin=$oid->vin"      : "" )
+                . ( ( $oid->vdate )  ? "&vdate=$oid->vdate"  : "" )
+                . ( ( $oid->siyopt ) ? "&siyopt=$oid->siyopt" : "" );
+            break;
+        case 'adc':
+            $oid->model = isset($_GET['model']) ? $_GET['model'] : '';
+            $oid->tree = isset($_GET['tree']) ? $_GET['tree'] : '';
+            $oid->jump = isset($_GET['jump']) ? $_GET['jump'] : '';
+            $api = new \ADC();
+            $response = $api->getDetails($oid->model, $oid->tree, $oid->jump);
+            $car->illustration = $response->mapImg;
+            $car->details = $response->details;
+            $car->next = $response->nav->next;
+            $car->prev = $response->nav->prev;
+
+            break;
+        default:
+            echo 'Error';
+            break;
+    }
+
+    $data = [
+        'catalog' => $oid->catalog,
+        'oid' => $oid,
+        'car' => $car
+    ];
+
+    return $data;
 });
-/* function($data) {
+
+/* models function($data) {
     // Общее
     $oid = new \StdClass();
     $car = new \StdClass();
@@ -238,8 +342,7 @@ add_filter('sage/template/models/data', function($data) {
     return $data;
 });
 */
-add_filter('sage/template/options/data', __NAMESPACE__ . '\get_options');
-/* function($data) {
+/* options function($data) {
     $oid = new \StdClass();
     $car = new \StdClass();
     $oid->catalog = isset($_GET['cat']) ? $_GET['cat'] : '';
@@ -299,8 +402,7 @@ add_filter('sage/template/options/data', __NAMESPACE__ . '\get_options');
     return $data;
 });
 */
-add_filter('sage/template/production/data', __NAMESPACE__ . '\get_production');
-/* function($data) {
+/* productions function($data) {
     $oid = new \StdClass();
     $car = new \StdClass();
     $oid->catalog = isset($_GET['cat']) ? $_GET['cat'] : '';
@@ -523,7 +625,7 @@ add_filter('sage/template/groups/data', function($data) {
 
     return $data;
 });
-add_filter('sage/template/subgroups/data', __NAMESPACE__ . '\get_subgroups');
+
 // Aftermarket + ADC
 add_filter('sage/template/equipments/data', function($data) {
     $api    = new \TD();
@@ -651,321 +753,6 @@ add_filter('sage/template/details/data', function($data) {
 
     return $data;
 });
-
-add_filter('sage/template/illustration/data', function($data) {
-    $oid = new \StdClass();
-    $car = new \StdClass();
-    $oid->catalog = isset($_GET['cat']) ? $_GET['cat'] : '';
-    $oid->mark = isset($_GET['mark']) ? $_GET['mark'] : '';
-    $oid->model = isset($_GET['model']) ? $_GET['model'] : '';
-    $oid->market = isset($_GET['market']) ? $_GET['market'] : '';
-    $oid->production = isset($_GET['production']) ? $_GET['production'] : '';
-    $oid->group = isset($_GET['group']) ? $_GET['group'] : '';
-    $oid->subgroup = isset($_GET['subgroup']) ? $_GET['subgroup'] : '';
-
-    // Обязательно к применению
-    include( get_theme_root() . '/autos/vendor/autodealer/_lib.php' );
-    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
-
-    switch ($oid->catalog) {
-        case 'fiat':
-            $api = new \Fiat();
-            $oid->table = isset($_GET['table']) ? urldecode(base64_decode($_GET['table'])) : '';
-            $response = $api->getFIATPartDrawData($oid->production, $oid->group, $oid->subgroup, $oid->table);
-            $variant = $response->partDrawData->variants[0]->variante;
-            $car->parts = $response;
-            $response = $api->getFIATDraw($oid->mark, $oid->model, $oid->production, $oid->group, $oid->subgroup, $oid->table, $variant, 0.5);
-            $car->illustration = $response;
-            break;
-        case 'etka':
-            $api = new \ETKA();
-            $oid->production_year = isset($_GET['production_year']) ? $_GET['production_year'] : '';
-            $oid->dir = isset($_GET['dir']) ? $_GET['dir'] : 'R';
-            $oid->code = isset($_GET['code']) ? $_GET['code'] : '';
-            $oid->graphic = isset($_GET['graphic']) ? $_GET['graphic'] : '';
-            $response = $api->getETKAIllustration($oid->mark, $oid->market, $oid->model, $oid->production_year, $oid->code, $oid->dir, $oid->group, $oid->subgroup, $oid->graphic, 0.5);
-            $car->illustration = $response;
-            $car->url = "/illustration/?cat={ $oid->catalog }&mark={ $oid->mark }&market={ $oid->market }&model={ $oid->model }&production_year={ $oid->production_year }&code={ $oid->code }";
-            break;
-        case 'bmw':
-            $api = new \BMW();
-            $oid->mark   = $api->rcv('mark');
-            $oid->type   = $api->rcv('type');
-            $oid->series = $api->rcv('series');
-            $oid->body   = $api->rcv('body');
-            $oid->model  = $api->rcv('model');
-            $oid->market = $api->rcv('market');
-            $oid->rule   = $api->rcv('rule');
-            $oid->trans  = $api->rcv('transmission');
-            $oid->prod   = $api->rcv('production');
-            $oid->group  = $api->rcv('group');
-            $oid->graphic= $api->rcv('graphic');
-
-            $response = $api->getBMWDetailsMap($oid->type,$oid->series,$oid->body,$oid->model,$oid->market,$oid->rule,$oid->trans,$oid->prod,$oid->group,$oid->graphic, "ru");
-            $car->aLabels   = $response->labels;
-            $car->aDetails  = $response->details;
-            $car->aComments = $response->comments;
-            $car->imgInfo = $response->imgInfo;
-            $car->url = "/illustration/?cat=bmw&mark={$oid->mark}&type={$oid->type}&series={$oid->series}&body={$oid->body}&model={$oid->model}&market={$oid->market}&rule={$oid->rule}&transmission={$oid->trans}&production={$oid->prod}&group={$oid->group}";
-            break;
-        case 'nissan':
-            $api = new \NIS();
-            $oid->modification = isset($_GET['modification']) ? $_GET['modification'] : '';
-            $oid->figure = $api->rcv('figure');
-            $oid->subimage = '';
-            $oid->sec = '';
-            $response = $api->getNISPic($oid->market, $oid->model, $oid->modification, $oid->group, $oid->figure, $oid->subimage, $oid->sec);
-
-            $car->illustration = $response;
-            $car->nextUrl = "/detail/?cat=nissan&market={$oid->market}&model={$oid->model}&modif={$oid->modification}&group={$oid->group}&figure={$oid->figure}&subfig=";
-            $car->nextSecUrl = "/illustration/?cat=nissan&market={$oid->market}&model={$oid->model}&modif={$oid->modification}&group={$oid->group}&figure={$oid->figure}&subfig=";
-            $car->secUrl = "/illustration/?cat=nissan&market={$oid->market}&model={$oid->model}&modif={$oid->modification}&group={$oid->group}&figure=";
-
-            break;
-        case 'toyota':
-            $api = new \TOY();
-            $oid->compl = isset($_GET['compl']) ? $_GET['compl'] : '';
-            $oid->option = isset($_GET['option']) ? $_GET['option'] : '';
-            $oid->code = isset($_GET['code']) ? $_GET['code'] : '';
-            $oid->group = isset($_GET['group']) ? $_GET['group'] : '';
-            $oid->graphic = isset($_GET['graphic']) ? $_GET['graphic'] : '';
-            // дополнительные данные
-            $oid->vin = isset($_GET['vin']) ? $_GET['vin'] : '';
-            $oid->vdate = isset($_GET['vdate']) ? $_GET['vdate'] : '';
-            $oid->siyopt = isset($_GET['siyopt']) ? $_GET['siyopt'] : '';
-
-            $car->getString = ""
-                . ( ( $oid->vin )    ? "&vin=$oid->vin"      : "" )
-                . ( ( $oid->vdate )  ? "&vdate=$oid->vdate"  : "" )
-                . ( ( $oid->siyopt ) ? "&siyopt=$oid->siyopt" : "" );
-            break;
-        case 'adc':
-            $oid->model = isset($_GET['model']) ? $_GET['model'] : '';
-            $oid->tree = isset($_GET['tree']) ? $_GET['tree'] : '';
-            $oid->jump = isset($_GET['jump']) ? $_GET['jump'] : '';
-            $api = new \ADC();
-            $response = $api->getDetails($oid->model, $oid->tree, $oid->jump);
-            $car->illustration = $response->mapImg;
-            $car->details = $response->details;
-            $car->next = $response->nav->next;
-            $car->prev = $response->nav->prev;
-
-            break;
-        default:
-            echo 'Error';
-            break;
-    }
-
-    $data = [
-        'catalog' => $oid->catalog,
-        'oid' => $oid,
-        'car' => $car
-    ];
-
-    return $data;
-});
-
-//// BMW
-// Series
-add_action('wp_ajax_bmw_series', __NAMESPACE__ . '\bmw_series');
-add_action('wp_ajax_nopriv_bmw_series', __NAMESPACE__ . '\bmw_series');
-// Models
-add_action('wp_ajax_bmw_models', __NAMESPACE__ . '\bmw_models');
-add_action('wp_ajax_nopriv_bmw_models', __NAMESPACE__ . '\bmw_models');
-// Options
-add_action('wp_ajax_bmw_options', __NAMESPACE__ . '\bmw_options');
-add_action('wp_ajax_nopriv_bmw_options', __NAMESPACE__ . '\bmw_options');
-// Production
-add_action('wp_ajax_bmw_production', __NAMESPACE__ . '\bmw_production');
-add_action('wp_ajax_nopriv_bmw_production', __NAMESPACE__ . '\bmw_production');
-// Groups
-add_action('wp_ajax_bmw_groups', __NAMESPACE__ . '\bmw_groups');
-add_action('wp_ajax_nopriv_bmw_groups', __NAMESPACE__ . '\bmw_groups');
-// Subgroups
-add_action('wp_ajax_bmw_subgroups', __NAMESPACE__ . '\bmw_subgroups');
-add_action('wp_ajax_nopriv_bmw_subgroups', __NAMESPACE__ . '\bmw_subgroups');
-
-function api_bmw_series($oid) {
-    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
-    $api = new \BMW();
-    $series = [];
-    foreach ($api->getBMWCatalogs($oid->mark)->vt as $value) {
-        $item = new \StdClass();
-        $item->id = $value->Baureihe;
-        $item->name = $value->ExtBaureihe;
-        $series[] = $item;
-    }
-    return $series;
-}
-function api_bmw_models($oid) {
-    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
-    $api = new \BMW();
-    $response = new \StdClass();
-    $models = [];
-    $api_response = $api->getBMWModels($oid->type, $oid->series)->aModels;
-    foreach ($api_response[0]->models as $value) {
-        $models[] = $value;
-    }
-    $response = $api_response[0];
-    $response->models = $models;
-    return $response;
-}
-function api_bmw_options($oid) {
-    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
-    $api = new \BMW();
-    return $api->getBMWOptions($oid->type, $oid->series, $oid->body, $oid->model, $oid->market)->aData;
-}
-function api_bmw_production($oid) {
-    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
-    $api = new \BMW();
-    $response = $api->getBMWProduction($oid->type, $oid->series, $oid->body, $oid->model, $oid->market, $oid->rule, $oid->transmission)->aData;
-    $response = current($response);
-    $response = [
-        "DateStart"  => $response->DateStart,
-        "DateEnd"    => $response->DateEnd,
-        "startYear"  => substr($response->DateStart,0,4),
-        "startMonth" => substr($response->DateStart,4,2),
-        "startDay"   => substr($response->DateStart,6,2),
-        "endYear"    => substr($response->DateEnd,0,4),
-        "endMonth"   => substr($response->DateEnd,4,2),
-        "endDay"     => substr($response->DateEnd,6,2),
-    ];
-    return $response;
-}
-function api_bmw_groups($oid) {
-    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
-    $api = new \BMW();
-    return $api->getBMWGroups($oid->type, $oid->series, $oid->body, $oid->model, $oid->market, $oid->rule, $oid->transmission, $oid->production, $oid->lang)->aData;
-}
-function api_bmw_subgroups($oid) {
-    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
-    $api = new \BMW();
-    return $api->getBMWSubGroups($oid->type, $oid->series, $oid->body, $oid->model, $oid->market, $oid->rule, $oid->transmission, $oid->production, $oid->group)->aData;
-}
-
-function bmw_series() {
-    $oid = new \StdClass();
-    $oid->catalog = 'bmw';
-    $oid->mark = 'bmw';
-    $oid->type = 'vt';
-
-    $series = tlc_transient( "{$oid->catalog}-series" )
-            ->expires_in( 30 )
-            ->updates_with( __NAMESPACE__ . '\api_bmw_series', array( $oid ) )
-            ->get();
-    if ( ! $series ) $series = api_bmw_series($oid);
-    $data = [
-        'series' => $series,
-        'oid' => $oid
-    ];
-    wp_send_json_success($data);
-}
-function bmw_models() {
-    $oid = new \StdClass();
-    $oid->catalog = 'bmw';
-    $oid->mark = 'bmw';
-    $oid->type = 'vt';
-    $oid->series = isset($_POST['series']) ? $_POST['series'] : '';
-
-    $markets = tlc_transient( "{$oid->catalog}-{$oid->series}" )
-            ->expires_in( 0 )
-            ->updates_with( __NAMESPACE__ . '\api_bmw_models', array( $oid ) )
-            ->get();
-    if ( ! $markets ) $markets = api_bmw_models($oid);
-
-    $data = [
-        'markets' => $markets,
-        'oid' => $oid
-    ];
-    wp_send_json_success($data);
-}
-function bmw_options() {
-    $oid = new \StdClass();
-    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
-    $oid->catalog = 'bmw';
-    $oid->mark = 'bmw';
-    $oid->type = 'vt';
-
-    $key = "{$oid->catalog}-{$oid->series}-{$oid->body}-{$oid->model}-{$oid->market}";
-    $items = tlc_transient( $key )
-            ->expires_in( 0 )
-            ->updates_with( __NAMESPACE__ . '\api_bmw_options', array( $oid ) )
-            ->get();
-    if ( ! $items ) $items = api_bmw_options($oid);
-
-    $data = [
-        'oid' => $oid,
-        'options' => $items
-    ];
-
-    wp_send_json_success( $data );
-}
-function bmw_production() {
-    $oid = new \StdClass();
-    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
-    $oid->catalog = 'bmw';
-    $oid->mark = 'bmw';
-    $oid->type = 'vt';
-
-    $key = "{$oid->catalog}-{$oid->series}-{$oid->body}-{$oid->model}-{$oid->market}-{$oid->rule}-{$oid->transmission}";
-    $items = tlc_transient( $key )
-            ->expires_in( 0 )
-            ->updates_with( __NAMESPACE__ . '\api_bmw_production', array( $oid ) )
-            ->get();
-    if ( ! $items ) $items = api_bmw_production($oid);
-
-    $data = [
-        'oid' => $oid,
-        'production' => $items
-    ];
-
-    wp_send_json_success( $data );
-}
-function bmw_groups() {
-    $oid = new \StdClass();
-    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
-    $oid->catalog = 'bmw';
-    $oid->mark = 'bmw';
-    $oid->type = 'vt';
-    $oid->lang = 'ru';
-
-    $key = "{$oid->catalog}-{$oid->series}-{$oid->body}-{$oid->model}-{$oid->market}-{$oid->rule}-{$oid->transmission}-{$oid->production}";
-    $items = tlc_transient( $key )
-            ->expires_in( 0 )
-            ->updates_with( __NAMESPACE__ . '\api_bmw_groups', array( $oid ) )
-            ->get();
-    if ( ! $items ) $items = api_bmw_groups($oid);
-
-    $data = [
-        'oid' => $oid,
-        'groups' => $items
-    ];
-
-    wp_send_json_success( $data );
-}
-function bmw_subgroups() {
-    $oid = new \StdClass();
-    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
-    $oid->catalog = 'bmw';
-    $oid->mark = 'bmw';
-    $oid->type = 'vt';
-
-    $key = "{$oid->catalog}-{$oid->series}-{$oid->body}-{$oid->model}-{$oid->market}-{$oid->rule}-{$oid->transmission}-{$oid->production}-{$oid->group}";
-    $items = tlc_transient( $key )
-            ->expires_in( 0 )
-            ->updates_with( __NAMESPACE__ . '\api_bmw_subgroups', array( $oid ) )
-            ->get();
-    if ( ! $items ) $items = api_bmw_subgroups($oid);
-
-    $data = [
-        'oid' => $oid,
-        'subgroups' => $items
-    ];
-
-    wp_send_json_success( $data );
-}
-
-
 
 function get_models($data = '') {
     // Общее
@@ -1224,7 +1011,6 @@ function get_subgroups($data = '') {
     endif;
 
     // Обязательно к применению
-    include( get_theme_root() . '/autos/vendor/autodealer/_lib.php' );
     include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
 
     switch ($oid->catalog) {
@@ -1305,4 +1091,756 @@ function get_subgroups($data = '') {
 
     if ( wp_doing_ajax() ) wp_send_json_success($data);
     return $data;
+}
+
+
+
+
+
+/* BMW */
+
+// Series
+add_action('wp_ajax_bmw_series', __NAMESPACE__ . '\bmw_series');
+add_action('wp_ajax_nopriv_bmw_series', __NAMESPACE__ . '\bmw_series');
+// Models
+add_action('wp_ajax_bmw_models', __NAMESPACE__ . '\bmw_models');
+add_action('wp_ajax_nopriv_bmw_models', __NAMESPACE__ . '\bmw_models');
+// Options
+add_action('wp_ajax_bmw_options', __NAMESPACE__ . '\bmw_options');
+add_action('wp_ajax_nopriv_bmw_options', __NAMESPACE__ . '\bmw_options');
+// Production
+add_action('wp_ajax_bmw_production', __NAMESPACE__ . '\bmw_production');
+add_action('wp_ajax_nopriv_bmw_production', __NAMESPACE__ . '\bmw_production');
+// Groups
+add_action('wp_ajax_bmw_groups', __NAMESPACE__ . '\bmw_groups');
+add_action('wp_ajax_nopriv_bmw_groups', __NAMESPACE__ . '\bmw_groups');
+// Subgroups
+add_action('wp_ajax_bmw_subgroups', __NAMESPACE__ . '\bmw_subgroups');
+add_action('wp_ajax_nopriv_bmw_subgroups', __NAMESPACE__ . '\bmw_subgroups');
+
+
+function api_bmw_series($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \BMW();
+    $series = [];
+    foreach ($api->getBMWCatalogs($oid->mark)->vt as $value) {
+        $item = new \StdClass();
+        $item->id = $value->Baureihe;
+        $item->name = $value->ExtBaureihe;
+        $series[] = $item;
+    }
+    return $series;
+}
+function api_bmw_models($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \BMW();
+    $response = new \StdClass();
+    $models = [];
+    $api_response = $api->getBMWModels($oid->type, $oid->series)->aModels;
+    foreach ($api_response[0]->models as $value) {
+        $models[] = $value;
+    }
+    $response = $api_response[0];
+    $response->models = $models;
+    return $response;
+}
+function api_bmw_options($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \BMW();
+    return $api->getBMWOptions($oid->type, $oid->series, $oid->body, $oid->model, $oid->market)->aData;
+}
+function api_bmw_production($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \BMW();
+    $response = $api->getBMWProduction($oid->type, $oid->series, $oid->body, $oid->model, $oid->market, $oid->rule, $oid->transmission)->aData;
+    $response = current($response);
+    $response = [
+        "DateStart"  => $response->DateStart,
+        "DateEnd"    => $response->DateEnd,
+        "startYear"  => substr($response->DateStart,0,4),
+        "startMonth" => substr($response->DateStart,4,2),
+        "startDay"   => substr($response->DateStart,6,2),
+        "endYear"    => substr($response->DateEnd,0,4),
+        "endMonth"   => substr($response->DateEnd,4,2),
+        "endDay"     => substr($response->DateEnd,6,2),
+    ];
+    return $response;
+}
+function api_bmw_groups($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \BMW();
+    return $api->getBMWGroups($oid->type, $oid->series, $oid->body, $oid->model, $oid->market, $oid->rule, $oid->transmission, $oid->production, $oid->lang)->aData;
+}
+function api_bmw_subgroups($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \BMW();
+    return $api->getBMWSubGroups($oid->type, $oid->series, $oid->body, $oid->model, $oid->market, $oid->rule, $oid->transmission, $oid->production, $oid->group)->aData;
+}
+
+function bmw_series() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+
+    $series = tlc_transient( "{$oid->catalog}-series" )
+            ->expires_in( 30 )
+            ->updates_with( __NAMESPACE__ . '\api_bmw_series', array( $oid ) )
+            ->get();
+    if ( ! $series ) $series = api_bmw_series($oid);
+    $data = [
+        'series' => $series,
+        'oid' => $oid
+    ];
+    wp_send_json_success($data);
+}
+function bmw_models() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+
+    $markets = tlc_transient( "{$oid->catalog}-{$oid->series}" )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_bmw_models', array( $oid ) )
+            ->get();
+    if ( ! $markets ) $markets = api_bmw_models($oid);
+
+    $data = [
+        'markets' => $markets,
+        'oid' => $oid
+    ];
+    wp_send_json_success($data);
+}
+function bmw_options() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+    $oid->catalog = 'bmw';
+    $oid->mark = 'bmw';
+    $oid->type = 'vt';
+
+    $key = "{$oid->catalog}-{$oid->series}-{$oid->body}-{$oid->model}-{$oid->market}";
+    $items = tlc_transient( $key )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_bmw_options', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_bmw_options($oid);
+
+    $data = [
+        'oid' => $oid,
+        'options' => $items
+    ];
+
+    wp_send_json_success( $data );
+}
+function bmw_production() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+    $oid->catalog = 'bmw';
+    $oid->mark = 'bmw';
+    $oid->type = 'vt';
+
+    $key = "{$oid->catalog}-{$oid->series}-{$oid->body}-{$oid->model}-{$oid->market}-{$oid->rule}-{$oid->transmission}";
+    $items = tlc_transient( $key )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_bmw_production', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_bmw_production($oid);
+
+    $data = [
+        'oid' => $oid,
+        'production' => $items
+    ];
+
+    wp_send_json_success( $data );
+}
+function bmw_groups() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+    $oid->catalog = 'bmw';
+    $oid->mark = 'bmw';
+    $oid->type = 'vt';
+    $oid->lang = 'ru';
+
+    $key = "{$oid->catalog}-{$oid->series}-{$oid->body}-{$oid->model}-{$oid->market}-{$oid->rule}-{$oid->transmission}-{$oid->production}";
+    $items = tlc_transient( $key )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_bmw_groups', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_bmw_groups($oid);
+
+    $data = [
+        'oid' => $oid,
+        'groups' => $items
+    ];
+
+    wp_send_json_success( $data );
+}
+function bmw_subgroups() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+    $oid->catalog = 'bmw';
+    $oid->mark = 'bmw';
+    $oid->type = 'vt';
+
+    $key = "{$oid->catalog}-{$oid->series}-{$oid->body}-{$oid->model}-{$oid->market}-{$oid->rule}-{$oid->transmission}-{$oid->production}-{$oid->group}";
+    $items = tlc_transient( $key )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_bmw_subgroups', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_bmw_subgroups($oid);
+
+    $data = [
+        'oid' => $oid,
+        'subgroups' => $items,
+        'url' => "/illustration/?cat=bmw&mark={$oid->mark}&type={$oid->type}&series={$oid->series}&body={$oid->body}&model={$oid->model}&market={$oid->market}&rule={$oid->rule}&transmission={$oid->transmission}&production={$oid->production}&group={$oid->group}"
+    ];
+
+    wp_send_json_success( $data );
+}
+
+/* ETKA */
+
+// Models
+add_action('wp_ajax_etka_models', __NAMESPACE__ . '\etka_models');
+add_action('wp_ajax_nopriv_etka_models', __NAMESPACE__ . '\etka_models');
+// Production
+add_action('wp_ajax_etka_production', __NAMESPACE__ . '\etka_production');
+add_action('wp_ajax_nopriv_etka_production', __NAMESPACE__ . '\etka_production');
+// Groups
+add_action('wp_ajax_etka_groups', __NAMESPACE__ . '\etka_groups');
+add_action('wp_ajax_nopriv_etka_groups', __NAMESPACE__ . '\etka_groups');
+// Subgroups
+add_action('wp_ajax_etka_subgroups', __NAMESPACE__ . '\etka_subgroups');
+add_action('wp_ajax_nopriv_etka_subgroups', __NAMESPACE__ . '\etka_subgroups');
+
+function api_etka_models($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \ETKA();
+
+    $response = $api->getETKAMarkets($oid->mark);
+    $markets = $response->markets;
+    $models = array();
+    foreach ($markets as $value)
+        $models[$value->code] = $api->getETKAModels($oid->mark, $value->code)->models;
+
+    return $models;
+}
+function api_etka_production($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \ETKA();
+    return $api->getETKAProduction($oid->mark, $oid->market, $oid->model)->prod;
+}
+function api_etka_groups($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \ETKA();
+    $groups = array();
+    $response = $api->getETKAGroups($oid->mark, $oid->market, $oid->model, $oid->production, $oid->code, $oid->dir)->hg;
+    foreach ($response as $value) $groups[] = $value;
+    return $groups;
+}
+function api_etka_subgroups($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \ETKA();
+    $subgroups = array();
+    $response = $api->getETKASubGroups($oid->mark, $oid->market, $oid->model, $oid->production, $oid->code, $oid->dir, $oid->group)->ug;
+    foreach ($response as $value) if ( $value->ou != 'O' ) $subgroups[] = $value;
+    return $subgroups;
+}
+
+function etka_models() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+
+    $markets = tlc_transient( "{$oid->catalog}-{$oid->mark}" )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_etka_models', array( $oid ) )
+            ->get();
+    if ( ! $markets ) $markets = api_etka_models($oid);
+
+    $data = [
+        'markets' => $markets,
+        'oid' => $oid
+    ];
+    wp_send_json_success($data);
+}
+function etka_production() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+
+    $key = "{$oid->catalog}-{$oid->mark}-{$oid->market}-{$oid->model}";
+    $items = tlc_transient( $key )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_etka_production', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_etka_production($oid);
+
+    $data = [
+        'oid' => $oid,
+        'items' => $items
+    ];
+
+    wp_send_json_success( $data );
+}
+function etka_groups() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+
+    $key = "{$oid->catalog}-{$oid->mark}-{$oid->market}-{$oid->model}-{$oid->production}-{$oid->code}-{$oid->dir}";
+    $items = tlc_transient( $key )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_etka_groups', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_etka_groups($oid);
+
+    $data = [
+        'oid' => $oid,
+        'items' => $items
+    ];
+
+    wp_send_json_success( $data );
+}
+function etka_subgroups() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+
+    $key = "{$oid->catalog}-{$oid->mark}-{$oid->market}-{$oid->model}-{$oid->production}-{$oid->code}-{$oid->dir}-{$oid->group}";
+    $items = tlc_transient( $key )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_etka_subgroups', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_etka_subgroups($oid);
+
+    $data = [
+        'oid' => $oid,
+        'items' => $items,
+        'url' => "/illustration/?cat={$oid->catalog}&mark={$oid->mark}&market={$oid->market}&model={$oid->model}&production={$oid->production}&code={$oid->code}&group={$oid->group}"
+    ];
+
+    wp_send_json_success( $data );
+}
+
+/* Nissan */
+
+// Models
+add_action('wp_ajax_nissan_models', __NAMESPACE__ . '\nissan_models');
+add_action('wp_ajax_nopriv_nissan_models', __NAMESPACE__ . '\nissan_models');
+// Production
+add_action('wp_ajax_nissan_modifications', __NAMESPACE__ . '\nissan_modifications');
+add_action('wp_ajax_nopriv_nissan_modifications', __NAMESPACE__ . '\nissan_modifications');
+// Groups
+add_action('wp_ajax_nissan_groups', __NAMESPACE__ . '\nissan_groups');
+add_action('wp_ajax_nopriv_nissan_groups', __NAMESPACE__ . '\nissan_groups');
+// Subgroups
+add_action('wp_ajax_nissan_subgroups', __NAMESPACE__ . '\nissan_subgroups');
+add_action('wp_ajax_nopriv_nissan_subgroups', __NAMESPACE__ . '\nissan_subgroups');
+
+function api_nissan_models($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \NIS();
+
+    $markets = array();
+    foreach ($api->getNisMarkets($oid->mark) as $key => $value) {
+        $markets[$key] = new \StdClass;
+        $markets[$key]->name = $value;
+        $markets[$key]->models = $api->getNisModels($oid->mark, $key)->aModels;
+    }
+
+    return $markets;
+}
+function api_nissan_modifications($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \NIS();
+    return $api->getNisModiff($oid->market, $oid->model)->aModif;
+}
+function api_nissan_groups($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \NIS();
+    return $api->getNisModInfo($oid->market, $oid->model, $oid->modification)->aModInfo;
+}
+function api_nissan_subgroups($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \NIS();
+    $subgroups = array();
+    return $api->getNisGroup($oid->market, $oid->model, $oid->modification, $oid->group)->aGroup;
+}
+
+function nissan_models() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+
+    $markets = tlc_transient( "{$oid->catalog}-{$oid->mark}" )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_nissan_models', array( $oid ) )
+            ->get();
+    if ( ! $markets ) $markets = api_nissan_models($oid);
+
+    $data = [
+        'items' => $markets,
+        'oid' => $oid
+    ];
+    wp_send_json_success($data);
+}
+function nissan_modifications() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+
+    $key = "{$oid->catalog}-{$oid->mark}-{$oid->model}-{$oid->market}";
+    $items = tlc_transient( $key )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_nissan_modifications', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_nissan_modifications($oid);
+
+    $data = [
+        'oid' => $oid,
+        'items' => $items
+    ];
+
+    wp_send_json_success( $data );
+}
+function nissan_groups() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+
+    $key = "{$oid->catalog}-{$oid->mark}-{$oid->model}-{$oid->market}-{$oid->modification}";
+    $items = tlc_transient( $key )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_nissan_groups', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_nissan_groups($oid);
+
+    $data = [
+        'oid' => $oid,
+        'items' => $items
+    ];
+
+    wp_send_json_success( $data );
+}
+function nissan_subgroups() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+
+    $key = "{$oid->catalog}-{$oid->mark}-{$oid->model}-{$oid->market}-{$oid->modification}-{$oid->group}";
+    $items = tlc_transient( $key )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_nissan_subgroups', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_nissan_subgroups($oid);
+
+    $data = [
+        'oid' => $oid,
+        'items' => $items,
+        'url' => "/illustration/?cat=nissan&market={$oid->market}&model={$oid->model}&modification={$oid->modification}&group={$oid->group}"
+    ];
+
+    wp_send_json_success( $data );
+}
+
+/* Toyota */
+
+// Models
+add_action('wp_ajax_toyota_models', __NAMESPACE__ . '\toyota_models');
+add_action('wp_ajax_nopriv_toyota_models', __NAMESPACE__ . '\toyota_models');
+// Options
+add_action('wp_ajax_toyota_options', __NAMESPACE__ . '\toyota_options');
+add_action('wp_ajax_nopriv_toyota_options', __NAMESPACE__ . '\toyota_options');
+// Groups
+add_action('wp_ajax_toyota_groups', __NAMESPACE__ . '\toyota_groups');
+add_action('wp_ajax_nopriv_toyota_groups', __NAMESPACE__ . '\toyota_groups');
+
+function api_toyota_models($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \TOY();
+
+    $markets = array();
+    foreach ($api->getToyMarkets() as $key => $value) {
+        $markets[$key] = new \StdClass;
+        $markets[$key]->name = $value;
+        $markets[$key]->models = $api->getToyModels($oid->mark, $key)->aModels;
+    }
+
+    return $markets;
+}
+function api_toyota_options($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \TOY();
+    return $api->getToyModiff($oid->market, $oid->model)->aModif;
+}
+function api_toyota_groups($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \TOY();
+    $response = $api->getToyModCompl($oid->market, $oid->model, $oid->compl, $oid->option, $oid->code, $oid->vin, $oid->vdate, $oid->siyopt)->aCompl;
+    return $response;
+}
+
+function toyota_models() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+
+    $markets = tlc_transient( "{$oid->catalog}-{$oid->mark}" )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_toyota_models', array( $oid ) )
+            ->get();
+    if ( ! $markets ) $markets = api_toyota_models($oid);
+
+    $data = [
+        'items' => $markets,
+        'oid' => $oid
+    ];
+    wp_send_json_success($data);
+}
+function toyota_options() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+
+    $key = "{$oid->catalog}-{$oid->mark}-{$oid->model}-{$oid->market}";
+    $items = tlc_transient( $key )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_toyota_options', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_toyota_options($oid);
+
+    $data = [
+        'oid' => $oid,
+        'items' => $items
+    ];
+
+    wp_send_json_success( $data );
+}
+function toyota_groups() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+    // дополнительные данные
+    $oid->vin = ''; // isset($_GET['vin']) ? $_GET['vin'] : '';
+    $oid->vdate = ''; // isset($_GET['vdate']) ? $_GET['vdate'] : '';
+    $oid->siyopt = ''; // isset($_GET['siyopt']) ? $_GET['siyopt'] : '';
+    // $key = "{$oid->catalog}-{$oid->mark}-{$oid->model}-{$oid->market}-{$oid->compl}-{$oid->sysopt}-{$oid->code}";
+    // $items = tlc_transient( $key )
+    //         ->expires_in( 0 )
+    //         ->updates_with( __NAMESPACE__ . '\api_toyota_groups', array( $oid ) )
+    //         ->get();
+    // if ( ! $items )
+    $items = api_toyota_groups($oid);
+
+    $url = "/illustration/?cat=toyota&mark={$oid->mark}&market={$oid->market}&model={$oid->model}&compl={$oid->compl}&option={$oid->option}&code={$oid->code}";
+    // дополнительный url
+    $car->getString = ""
+        . ( ( $oid->vin )   ? "&vin={$oid->vin}" : "" )
+        . ( ( $oid->vdate ) ? "&vdate={$oid->vdate}" : "" )
+        . ( ( $oid->siyopt )? "&siyopt={$oid->siyopt}" : "" );
+
+    $data = [
+        'oid' => $oid,
+        'items' => $items,
+        'url' => $url
+    ];
+
+    wp_send_json_success( $data );
+}
+
+/* ADC */
+
+// Models
+add_action('wp_ajax_adc_models', __NAMESPACE__ . '\adc_models');
+add_action('wp_ajax_nopriv_adc_models', __NAMESPACE__ . '\adc_models');
+// Tree
+add_action('wp_ajax_adc_tree', __NAMESPACE__ . '\adc_tree');
+add_action('wp_ajax_nopriv_adc_tree', __NAMESPACE__ . '\adc_tree');
+
+function api_adc_models($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \ADC();
+    $models = array();
+    foreach ($api->getModelList($oid->mark, $oid->type)->models as $value) {
+        $models[] = $value;
+    }
+    return $models;
+}
+function api_adc_tree($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \ADC();
+
+    $response = $api->getTreeList($oid->model, false);
+    usort($response->details, function($a, $b) {
+        if ( $a->parent_id == $b->parent_id ) {
+            return 0;
+        }
+        return $a->parent_id > $b->parent_id ? -1 : 1;
+    });
+    $response->details = array_combine(array_column($response->details, 'id'), $response->details);
+    foreach ($response->details as $value) {
+        if ($value->parent_id == 0 ) {
+            $value->ready = true;
+        }
+        $current = $value;
+        $response->details[$current->parent_id]->childrens[] = $current;
+    };
+    $tree = array_filter($response->details, function($item) { return isset($item->ready); });
+    return current($tree)->childrens;
+}
+
+function adc_models() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+
+    $items = tlc_transient( "{$oid->catalog}-{$oid->mark}" )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_adc_models', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_adc_models($oid);
+
+    $data = [
+        'items' => $items,
+        'oid' => $oid
+    ];
+    wp_send_json_success($data);
+}
+function adc_tree() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+
+    $key = "{$oid->catalog}-{$oid->mark}-{$oid->model}";
+    $items = tlc_transient( $key )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_adc_options', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_adc_tree($oid);
+    $url = "/illustration/?cat=adc&model={$oid->model}";
+
+    $data = [
+        'oid' => $oid,
+        'items' => $items,
+        'url' => $url
+    ];
+
+    wp_send_json_success( $data );
+}
+
+/* TD */
+
+// Models
+add_action('wp_ajax_td_models', __NAMESPACE__ . '\td_models');
+add_action('wp_ajax_nopriv_td_models', __NAMESPACE__ . '\td_models');
+// Equipments
+add_action('wp_ajax_td_equipments', __NAMESPACE__ . '\td_equipments');
+add_action('wp_ajax_nopriv_td_equipments', __NAMESPACE__ . '\td_equipments');
+// Tree
+add_action('wp_ajax_td_tree', __NAMESPACE__ . '\td_tree');
+add_action('wp_ajax_nopriv_td_tree', __NAMESPACE__ . '\td_tree');
+// Details
+add_action('wp_ajax_td_details', __NAMESPACE__ . '\td_details');
+add_action('wp_ajax_nopriv_td_details', __NAMESPACE__ . '\td_details');
+
+function api_td_models($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \TD();
+    return $api->getTDModels('pc', $oid->mark)->models;
+}
+function api_td_equipments($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \TD();
+    return $api->getTDCompl('pc', $oid->mark, $oid->model)->compl;
+}
+function api_td_tree($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \TD();
+    $response = $api->getTDTree('pc', $oid->mark, $oid->model, $oid->equipment);
+
+    usort($response->tree, function($a, $b) {
+        if ( $a->str_level == $b->str_level ) {
+            return 0;
+        }
+        return $a->str_level > $b->str_level ? -1 : 1;
+    });
+    $min = end($response->tree)->str_level;
+
+    $response->tree = array_combine(array_column($response->tree, 'str_id'), $response->tree);
+    foreach ($response->tree as $value) {
+        if ($value->str_level == $min ) {
+            $value->ready = true;
+        }
+        $current = $value;
+        $response->tree[$current->str_id_parent]->childrens[] = $current;
+    };
+    $tree = array();
+    foreach (array_filter($response->tree, function($item) { return isset($item->ready); }) as $value) {
+        $tree[] = $value;
+    }
+    return $tree;
+}
+function api_td_details($oid) {
+    include( get_theme_root() . "/autos/vendor/autodealer/{$oid->catalog}/api.php" );
+    $api = new \TD();
+    return $api->getTDDetails('pc', $oid->mark, $oid->model, $oid->equipment, $oid->tree)->details;
+}
+
+function td_models() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+
+    $items = tlc_transient( "{$oid->catalog}-{$oid->mark}" )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_td_models', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_td_models($oid);
+
+    $data = [
+        'items' => $items,
+        'oid' => $oid
+    ];
+    wp_send_json_success($data);
+}
+function td_equipments() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+
+    $key = "{$oid->catalog}-{$oid->mark}-{$oid->model}";
+    $items = tlc_transient( $key )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_td_equipments', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_td_equipments($oid);
+
+    $data = [
+        'oid' => $oid,
+        'items' => $items,
+    ];
+
+    wp_send_json_success( $data );
+}
+function td_tree() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+
+    $key = "{$oid->catalog}-{$oid->mark}-{$oid->model}-{$oid->equipment}";
+    $items = tlc_transient( $key )
+            ->expires_in( 0 )
+            ->updates_with( __NAMESPACE__ . '\api_td_tree', array( $oid ) )
+            ->get();
+    if ( ! $items ) $items = api_td_tree($oid);
+
+    $data = [
+        'oid' => $oid,
+        'items' => $items,
+    ];
+
+    wp_send_json_success( $data );
+}
+function td_details() {
+    $oid = new \StdClass();
+    $oid = isset($_POST['oid']) ? (object) $_POST['oid'] : '';
+
+    // $key = "{$oid->catalog}-{$oid->mark}-{$oid->model}-{$oid->equipment}-{$oid->tree}";
+    // $items = tlc_transient( $key )
+    //         ->expires_in( 0 )
+    //         ->updates_with( __NAMESPACE__ . '\api_td_details', array( $oid ) )
+    //         ->get();
+    // if ( ! $items )
+    $items = api_td_details($oid);
+    // $url = "/illustration/?cat=adc&model={$oid->model}";
+
+    $data = [
+        'oid' => $oid,
+        'items' => $items,
+        // 'url' => $url
+    ];
+
+    wp_send_json_success( $data );
 }

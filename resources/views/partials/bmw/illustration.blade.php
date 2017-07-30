@@ -66,7 +66,6 @@ $url = $car->url;
                          onclick="labelClick(this,false)"
                          ondblclick="labelClick(this,true)"
                         >
-                        <?//=$_v->number?>
                     </div>
                 <?php } //*/?>
             </div>

@@ -7,8 +7,8 @@
             <spinner v-if="isLoading"></spinner>
             <ul v-else class="groups-list">
                 <li class="groups-item" v-for="group in filtered">
-                    <router-link :to="'/bmw/' + [ mark, series, body, model, market, rule, transmission, production, group.code ].join('/')">
-                        {{ group.name }}
+                    <router-link :to="'/etka/' + [ mark, market, model, production, code, dir, oid.type, group.hg ].join('/')">
+                        {{ group.text }}
                     </router-link>
                 </li>
             </ul>
@@ -26,26 +26,25 @@ export default {
             groups: {},
             search: '',
             oid: {
-                catalog: 'bmw',
-                type: 'vt',
+                catalog: 'etka',
+                dir: 'R',
+                type: 'G',
                 mark: this.mark,
-                series: this.series,
-                body: this.body,
-                model: this.model,
                 market: this.market,
-                rule: this.rule,
-                transmission: this.transmission,
+                model: this.model,
                 production: this.production,
+                code: this.code,
+                dir: this.dir
             }
         }
     },
-    props: [ 'mark', 'series', 'body', 'model', 'market', 'rule', 'transmission', 'production' ],
+    props: [ 'mark', 'market', 'model', 'production', 'code', 'dir' ],
     components: { Spinner },
     created() { this.fetchData() },
     methods: {
         fetchData() {
-            window.wp.ajax.send('bmw_groups', { data: { oid: this.oid } }).then( response => {
-                this.groups = response.groups
+            window.wp.ajax.send('etka_groups', { data: { oid: this.oid } }).then( response => {
+                this.groups = response.items
                 this.isLoading = false
             })
         }
@@ -53,7 +52,7 @@ export default {
     computed: {
         filtered() {
             return this.groups.filter( (item) => {
-                return item.name.toLowerCase().indexOf(this.search) > -1
+                return item.text.toLowerCase().indexOf(this.search) > -1
             } )
         }
     }
