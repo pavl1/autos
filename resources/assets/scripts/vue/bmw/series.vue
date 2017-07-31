@@ -1,5 +1,5 @@
 <template>
-    <div class="series">
+    <div class="catalog">
         <!-- Breads -->
 
         <input class="instant-search" type="text" name="" v-model="search" placeholder="Выберите / введите модель автомобиля">
@@ -8,13 +8,13 @@
             <spinner v-if="isLoading"></spinner>
             <table v-else class="table table-sm table-hover">
                 <thead>
-                    <tr class="series-header">
+                    <tr>
                         <th>Модель</th>
                         <th>Серия</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <router-link tag="tr" class="series-link" :to="'/bmw/' + [ mark, item.id].join('/')" v-for="item in filteredSeries">
+                    <router-link tag="tr" class="catalog-link" :to="'/bmw/' + [ mark, item.id].join('/')" v-for="item in filteredSeries">
                         <td>{{ item.name.split(' ', 1)[0] }}</td>
                         <td>{{ item.id }}</td>
                     </router-link>
@@ -55,9 +55,7 @@ export default {
     computed: {
         filteredSeries() {
             return this.series.filter( (item) => {
-                let id = item.id.toLowerCase().indexOf(this.search) > -1
-                let name = item.name.toLowerCase().indexOf(this.search) > -1
-                return ( id || name )
+                return [ item.id, item.name ].join().toLowerCase().indexOf(this.search.toLowerCase()) > -1
             })
         }
     }

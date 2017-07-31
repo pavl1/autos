@@ -1,18 +1,18 @@
 <template>
-    <div class="models">
+    <div class="catalog">
         <input class="instant-search" type="text" name="" v-model="search" placeholder="Выберите раздел">
 
         <transition name="slide-fade" mode="out-in">
             <spinner v-if="isLoading"></spinner>
             <div v-else>
-                <table v-for="child in tree" class="table table-sm table-hover">
+                <table v-for="child in tree" class="table table-sm table-hover" v-if="filteredTree(child).length">
                     <thead>
                         <tr>
                             <th>{{ child.tree_name }}</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr class="series-link" v-for="item in child.childrens" @click="illustration(item)">
+                        <tr class="catalog-link" v-for="item in filteredTree(child)" @click="illustration(item)">
                             <td>{{ item.tree_name }}</td>
                         </tr>
                     </tbody>
@@ -50,6 +50,11 @@ export default {
                 this.url = response.url
                 this.isLoading = false
             })
+        },
+        filteredTree(leaf) {
+            return leaf.childrens.filter( children => {
+                return children.tree_name.toLowerCase().indexOf(this.search.toLowerCase()) > -1
+            } )
         },
         illustration(item) {
             window.location.href = this.url + '&tree=' + item.id

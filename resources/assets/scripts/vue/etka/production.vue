@@ -1,15 +1,28 @@
 <template>
-    <div class="production">
+    <div class="catalog">
 
-        <input class="instant-search" type="text" name="" v-model="search" placeholder="Выберите / введите дату производства">
+        <input class="instant-search" type="text" name="" v-model="search" placeholder="Выберите дату производства">
 
         <transition name="slide-fade" mode="out-in">
             <spinner v-if="isLoading"></spinner>
-            <ul v-else>
-                <li v-for="production in filtered">
-                    <router-link :to="'/etka/' + [ mark, market, model, production.einsatz, production.epis_typ, oid.dir ].join('/')">{{ production.einsatz }}</router-link>
-                </li>
-            </ul>
+            <table v-else class="table table-sm table-hover">
+                <thead>
+                    <tr>
+                        <th>Дата производства</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <router-link
+                        tag="tr"
+                        class="catalog-link"
+                        :to="'/etka/' + [ mark, market, model, production.einsatz, production.epis_typ, oid.dir ].join('/')"
+                        v-for="production in filtered"
+                    >
+                        <td>{{ production.einsatz }}</td>
+                    </router-link>
+
+                </tbody>
+            </table>
         </transition>
     </div>
 </template>
@@ -46,7 +59,7 @@ export default {
     computed: {
         filtered() {
             return this.productions.filter( (production) => {
-                return production.einsatz.toLowerCase().indexOf(this.search) > -1
+                return production.einsatz.toLowerCase().indexOf(this.search.toLowerCase()) > -1
             } )
         }
 

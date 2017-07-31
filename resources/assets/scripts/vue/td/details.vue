@@ -1,5 +1,5 @@
 <template>
-    <div class="models">
+    <div class="catalog">
         <input readonly class="instant-search" type="text" name="" v-model="search" placeholder="Выберите деталь">
 
         <transition name="slide-fade" mode="out-in">
@@ -10,15 +10,13 @@
                         <th>Артикул</th>
                         <th>Производитель</th>
                         <th>Название</th>
-                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr class="series-link" v-for="item in filteredDetails">
+                    <tr class="catalog-link" v-for="item in filteredDetails" @click="searchDetail(item.art_article_nr1)">
                         <td>{{ item.art_article_nr }}</td>
                         <td>{{ item.brandName }}</td>
                         <td>{{ item.ga_des }}</td>
-                        <td><a :href="'/search/' + item.art_article_nr">Цена</a></td>
                     </tr>
                 </tbody>
             </table>
@@ -54,8 +52,8 @@ export default {
                 this.isLoading = false
             })
         },
-        illustration(item) {
-            window.location.href = '/search/' + item.art_id
+        searchDetail(item) {
+            window.location.href = '/search/' + item
         }
     },
     computed: {

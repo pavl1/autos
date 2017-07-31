@@ -1,11 +1,11 @@
 <template>
-    <div class="subgroups">
+    <div class="catalog">
 
         <input class="instant-search" type="text" name="" v-model="search" placeholder="Выберите / введите подгруппу">
 
         <transition name="slide-fade" mode="out-in">
             <spinner v-if="isLoading"></spinner>
-            <table v-else>
+            <table v-else class="table table-sm table-hover">
                 <thead>
                     <tr>
                         <th>№ Фигуры</th>
@@ -13,7 +13,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                        <tr v-for="subgroup in filtered" @click="illustration(subgroup.figure)">
+                        <tr class="catalog-link" v-for="subgroup in filtered" @click="illustration(subgroup.figure)">
                             <td>{{ subgroup.figure }}</td>
                             <td>{{ subgroup.PName }}</td>
                         </tr>
@@ -61,7 +61,7 @@ export default {
     computed: {
         filtered() {
             return this.subgroups.filter( (item) => {
-                return item.PName.toLowerCase().indexOf(this.search) > -1
+                return item.PName.toLowerCase().indexOf(this.search.toLowerCase()) > -1
             } )
         }
     }

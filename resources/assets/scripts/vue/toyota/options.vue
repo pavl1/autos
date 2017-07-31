@@ -1,5 +1,5 @@
 <template>
-    <div class="production">
+    <div class="catalog">
 
         <input class="instant-search" type="text" name="" v-model="search" placeholder="Выберите / введите модификацию">
 
@@ -7,7 +7,7 @@
             <spinner v-if="isLoading"></spinner>
             <table v-else class="table table-sm table-hover">
                 <thead>
-                    <tr class="model-header">
+                    <tr>
                         <th>Комплектация</th>
                         <th>Производство</th>
                         <th>Двигатель</th>
@@ -20,7 +20,7 @@
                 <tbody>
                     <router-link
                     tag="tr"
-                    class="series-link"
+                    class="catalog-link"
                     :to="'/toyota/' + [ mark, model, market, option.compl, option.sysopt, option.code ].join('/')"
                     v-for="option in filtered">
                         <td>{{ option.compl }}</td>
@@ -68,13 +68,13 @@ export default {
     computed: {
         filtered() {
             return this.options.filter( (option) => {
-                let compl = option.compl ? option.compl.toLowerCase().indexOf(this.search) > -1 : false
-                let prod = option.prod ? option.prod.toLowerCase().indexOf(this.search) > -1 : false
-                let engine = option.engine ? option.engine.toLowerCase().indexOf(this.search) > -1 : false
-                let body = option.boddy ? option.body.toLowerCase().indexOf(this.search) > -1 : false
-                let grade = option.grade ? option.grade.toLowerCase().indexOf(this.search) > -1 : false
-                let kpp = option.kpp ? option.kpp.toLowerCase().indexOf(this.search) > -1 : false
-                let other = option.other ? option.other.toLowerCase().indexOf(this.search) > -1 : false
+                let compl = option.compl ? option.compl.toLowerCase().indexOf(this.search.toLowerCase()) > -1 : false
+                let prod = option.prod ? option.prod.toLowerCase().indexOf(this.search.toLowerCase()) > -1 : false
+                let engine = option.engine ? option.engine.toLowerCase().indexOf(this.search.toLowerCase()) > -1 : false
+                let body = option.boddy ? option.body.toLowerCase().indexOf(this.search.toLowerCase()) > -1 : false
+                let grade = option.grade ? option.grade.toLowerCase().indexOf(this.search.toLowerCase()) > -1 : false
+                let kpp = option.kpp ? option.kpp.toLowerCase().indexOf(this.search.toLowerCase()) > -1 : false
+                let other = option.other ? option.other.toLowerCase().indexOf(this.search.toLowerCase()) > -1 : false
                 return ( compl || engine || body || grade || kpp || other )
             } )
         }

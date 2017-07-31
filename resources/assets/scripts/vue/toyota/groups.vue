@@ -1,19 +1,19 @@
 <template>
-    <div class="groups">
+    <div class="catalog">
 
         <input class="instant-search" type="text" name="" v-model="search" placeholder="Выберите / введите группу">
 
         <transition name="slide-fade" mode="out-in">
             <spinner v-if="isLoading"></spinner>
             <div v-else>
-                <table v-for="(section, index) in groups" v-if="filteredGroups(section).length">
+                <table class="table table-sm table-hover" v-for="(section, index) in groups" v-if="filteredGroups(section).length">
                     <thead>
                         <tr>
                             <th>{{ sectionName(index) }}</th>
                         </tr>
                     </thead>
                     <tbody>
-                            <tr v-for="group in filteredGroups(section)" @click="illustration(group)">
+                            <tr class="catalog-link" v-for="group in filteredGroups(section)" @click="illustration(group)">
                                 <td>{{ group.desc_en }}</td>
                             </tr>
                     </tbody>
@@ -77,7 +77,7 @@ export default {
         },
         filteredGroups(section) {
             return section.filter( group => {
-                return group.desc_en.toLowerCase().indexOf(this.search) > -1
+                return group.desc_en.toLowerCase().indexOf(this.search.toLowerCase()) > -1
             } )
         },
         illustration(group) {

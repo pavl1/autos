@@ -1,5 +1,5 @@
 <template>
-    <div class="models">
+    <div class="catalog">
         <input class="instant-search" type="text" name="" v-model="search" placeholder="Выберите / введите модель">
 
         <transition name="slide-fade" mode="out-in">
@@ -14,7 +14,7 @@
                 <tbody>
                     <router-link
                     tag="tr"
-                    class="series-link"
+                    class="catalog-link"
                     :to="'/td/' + [ mark, item.mod_id ].join('/')"
                     v-for="item in filteredModels">
                         <td>{{ item.mod_name_eng }}</td>

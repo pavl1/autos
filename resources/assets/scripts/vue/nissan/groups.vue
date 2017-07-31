@@ -1,11 +1,11 @@
 <template>
-    <div class="groups">
+    <div class="catalog">
 
         <input class="instant-search" type="text" name="" v-model="search" placeholder="Выберите / введите группу">
 
         <transition name="slide-fade" mode="out-in">
             <spinner v-if="isLoading"></spinner>
-            <table v-else>
+            <table v-else class="table table-sm table-hover">
                 <thead>
                     <tr>
                         <th>Группа</th>
@@ -15,6 +15,7 @@
                 <tbody>
                         <router-link
                             tag="tr"
+                            class="catalog-link"
                             :to="'/nissan/' + [ mark, model, market, modification, group.Group ].join('/')"
                             v-for="group in groups"
                         >
@@ -59,7 +60,7 @@ export default {
     computed: {
         filtered() {
             return this.groups.filter( (item) => {
-                return item.text.toLowerCase().indexOf(this.search) > -1
+                return item.text.toLowerCase().indexOf(this.search.toLowerCase()) > -1
             } )
         }
     }

@@ -50,9 +50,7 @@ export default {
     computed: {
         filtered() {
             return this.options.filter( item => {
-                let rule = item.RuleName.toLowerCase().indexOf(this.search) > -1
-                let transmission = item.GetriebeName.toLowerCase().indexOf(this.search) > -1
-                return ( rule || transmission )
+                return [ item.RuleName, item.GetriebeName ].join().toLowerCase().indexOf(this.search.toLowerCase()) > -1
             } )
         }
     }

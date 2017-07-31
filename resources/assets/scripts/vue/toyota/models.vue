@@ -1,5 +1,5 @@
 <template>
-    <div class="models">
+    <div class="catalog">
         <input class="instant-search" type="text" name="" v-model="search" placeholder="Выберите / введите модель">
 
         <transition name="slide-fade" mode="out-in">
@@ -8,7 +8,7 @@
 
             <table class="table table-sm table-hover" v-for="(market, index) in markets" v-if="filteredModels(market).length">
                 <thead>
-                    <tr class="model-header">
+                    <tr>
                         <th>{{ market.name }}</th>
                     </tr>
                     <tr>
@@ -20,7 +20,7 @@
                 <tbody>
                     <router-link
                     tag="tr"
-                    class="series-link"
+                    class="catalog-link"
                     :to="'/toyota/' + [ mark, item.modelCode, index ].join('/')"
                     v-for="item in filteredModels(market)">
                         <td>{{ item.modelName }}</td>
@@ -61,7 +61,7 @@ export default {
         },
         filteredModels(market) {
             return market.models.filter( model => {
-                return model.modelName.toLowerCase().indexOf(this.search) > - 1
+                return model.modelName.toLowerCase().indexOf(this.search.toLowerCase()) > - 1
             } )
         }
     }

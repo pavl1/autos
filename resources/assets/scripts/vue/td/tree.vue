@@ -1,5 +1,5 @@
 <template>
-    <div class="models">
+    <div class="catalog">
         <input class="instant-search" type="text" name="" v-model="search" placeholder="Выберите / введите комплектацию">
 
         <transition name="slide-fade" mode="out-in">
@@ -14,7 +14,7 @@
                     <tbody>
                         <router-link
                         tag="tr"
-                        class="series-link"
+                        class="catalog-link"
                         :to="'/td/' + [ mark, model, equipment, item.str_id ].join('/')"
                         v-for="item in filteredTree(leaf)">
                             <td>{{ item.str_des }}</td>

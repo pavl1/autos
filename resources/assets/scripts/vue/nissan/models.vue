@@ -1,28 +1,27 @@
 <template>
-    <div class="models">
+    <div class="catalog">
         <input class="instant-search" type="text" name="" v-model="search" placeholder="Выберите / введите модель">
 
         <transition name="slide-fade" mode="out-in">
             <spinner v-if="isLoading"></spinner>
             <div v-else>
-
-            <table class="table table-sm table-hover" v-for="(market, index) in markets" v-if="filteredModels(market).length">
-                <thead>
-                    <tr class="model-header">
-                        <th>{{ market.name }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <router-link
-                    tag="tr"
-                    class="series-link"
-                    :to="'/nissan/' + [ mark, item.series, index ].join('/')"
-                    v-for="item in filteredModels(market)">
-                        <td>{{ item.model }} / {{ item.series }} ({{ item.date }})</td>
-                    </router-link>
-                </tbody>
-            </table>
-        </div>
+                <table class="table table-sm table-hover" v-for="(market, index) in markets" v-if="filteredModels(market).length">
+                    <thead>
+                        <tr>
+                            <th>{{ market.name }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <router-link
+                        tag="tr"
+                        class="catalog-link"
+                        :to="'/nissan/' + [ mark, item.series, index ].join('/')"
+                        v-for="item in filteredModels(market)">
+                            <td>{{ item.model }} / {{ item.series }} ({{ item.date }})</td>
+                        </router-link>
+                    </tbody>
+                </table>
+            </div>
     </transition>
 </div>
 </template>
@@ -54,7 +53,7 @@ export default {
         },
         filteredModels(market) {
             return market.models.filter( model => {
-                return model.model.toLowerCase().indexOf(this.search) > - 1
+                return model.model.toLowerCase().indexOf(this.search.toLowerCase()) > - 1
             } )
         }
     }

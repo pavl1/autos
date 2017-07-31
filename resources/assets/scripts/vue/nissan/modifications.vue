@@ -1,11 +1,11 @@
 <template>
-    <div class="production">
+    <div class="catalog">
 
         <input class="instant-search" type="text" name="" v-model="search" placeholder="Выберите / введите модификацию">
 
         <transition name="slide-fade" mode="out-in">
             <spinner v-if="isLoading"></spinner>
-            <table class="table table-sm table-hover">
+            <table v-else class="table table-sm table-hover">
                 <thead>
                     <tr class="model-header">
                         <th>Производство</th>
@@ -19,7 +19,7 @@
                 <tbody>
                     <router-link
                     tag="tr"
-                    class="series-link"
+                    class="catalog-link"
                     :to="'/nissan/' + [ mark, model, market, modification.compl ].join('/')"
                     v-for="modification in filtered">
                         <td>{{ modification.prod }}</td>
@@ -66,13 +66,7 @@ export default {
     computed: {
         filtered() {
             return this.modifications.filter( (modification) => {
-                let production = modification.prod ? modification.prod.toLowerCase().indexOf(this.search) > -1 : false
-                let body = modification.Кузов ? modification.Кузов.toLowerCase().indexOf(this.search) > -1 : false
-                let engine = modification.Двигатель ? modification.Двигатель.toLowerCase().indexOf(this.search) > -1 : false
-                let drive = modification.Привод ? modification.Привод.toLowerCase().indexOf(this.search) > -1 : false
-                let transmission = modification.Трансмиссия ? modification.Трансмиссия.toLowerCase().indexOf(this.search) > -1 : false
-                let other = modification.other ? modification.other.join(' ').toLowerCase().indexOf(this.search) > -1 : false
-                return ( production || body || engine || drive || transmission || other )
+                return [ modification.prod, modification.Кузов, modification.Двигатель, modification.Привод, modification.Трансмиссия, modification.other ].join().toLowerCase().indexOf(this.search.toLowerCase()) > -1
             } )
         }
 

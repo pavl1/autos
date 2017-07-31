@@ -1,0 +1,24 @@
+.catalog {
+
+    thead {
+        th {
+            border: 0;
+            &::first-letter { text-transform: uppercase }
+        }
+    }
+
+    &-link {
+        background-color: $white;
+        cursor: pointer;
+        &:hover {
+            background-color: rgb(123, 160, 211) !important;
+            color: $white;
+        }
+        td {
+            border: 1px solid rgb(196, 196, 196);
+            padding: 0.25rem 1rem;
+        }
+
+    }
+
+}
